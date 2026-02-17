@@ -3,7 +3,7 @@ class Env {
 
   static const String apiUrl = String.fromEnvironment(
     'API_URL',
-    defaultValue: 'https://desirable-commitment-production-d2f7.up.railway.app',
+    defaultValue: 'https://api.estigo.org',
   );
 
   static const String sentryDsn = String.fromEnvironment(
