@@ -11,13 +11,13 @@ enum ReferralStatus {
 }
 
 enum PartnerTier {
-  @JsonValue('Bronze')
+  @JsonValue('bronze')
   bronze,
-  @JsonValue('Silver')
+  @JsonValue('silver')
   silver,
-  @JsonValue('Gold')
+  @JsonValue('gold')
   gold,
-  @JsonValue('Platinum')
+  @JsonValue('platinum')
   platinum,
 }
 

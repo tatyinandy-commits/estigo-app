@@ -4,11 +4,11 @@ part 'room.freezed.dart';
 part 'room.g.dart';
 
 enum RoomStatus {
-  @JsonValue('active')
+  @JsonValue('ACTIVE')
   active,
-  @JsonValue('renovation')
+  @JsonValue('RENOVATION')
   renovation,
-  @JsonValue('upcoming')
+  @JsonValue('UPCOMING')
   upcoming,
 }
 

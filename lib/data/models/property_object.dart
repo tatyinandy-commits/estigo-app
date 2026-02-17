@@ -4,9 +4,9 @@ part 'property_object.freezed.dart';
 part 'property_object.g.dart';
 
 enum ObjectStatus {
-  @JsonValue('active')
+  @JsonValue('ACTIVE')
   active,
-  @JsonValue('upcoming')
+  @JsonValue('UPCOMING')
   upcoming,
 }
 

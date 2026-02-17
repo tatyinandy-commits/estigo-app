@@ -63,8 +63,8 @@ Map<String, dynamic> _$$PartnerDataImplToJson(_$PartnerDataImpl instance) =>
     };
 
 const _$PartnerTierEnumMap = {
-  PartnerTier.bronze: 'Bronze',
-  PartnerTier.silver: 'Silver',
-  PartnerTier.gold: 'Gold',
-  PartnerTier.platinum: 'Platinum',
+  PartnerTier.bronze: 'bronze',
+  PartnerTier.silver: 'silver',
+  PartnerTier.gold: 'gold',
+  PartnerTier.platinum: 'platinum',
 };

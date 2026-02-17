@@ -31,21 +31,21 @@ class UserApi {
   }
 
   Future<PartnerData> getPartnerData() async {
-    final response = await _dio.get('/partner');
+    final response = await _dio.get('/partner/dashboard');
     return PartnerData.fromJson(response.data['data']);
   }
 
   Future<List<AppNotification>> getNotifications() async {
     final response = await _dio.get('/notifications');
-    final list = response.data['data'] as List;
+    final list = response.data['data']['notifications'] as List;
     return list.map((e) => AppNotification.fromJson(e)).toList();
   }
 
   Future<void> markNotificationRead(String id) async {
-    await _dio.put('/notifications/$id/read');
+    await _dio.post('/notifications/$id/read');
   }
 
   Future<void> markAllNotificationsRead() async {
-    await _dio.put('/notifications/read-all');
+    await _dio.post('/notifications/read-all');
   }
 }

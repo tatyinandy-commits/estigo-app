@@ -64,6 +64,6 @@ Map<String, dynamic> _$$PropertyObjectImplToJson(
     };
 
 const _$ObjectStatusEnumMap = {
-  ObjectStatus.active: 'active',
-  ObjectStatus.upcoming: 'upcoming',
+  ObjectStatus.active: 'ACTIVE',
+  ObjectStatus.upcoming: 'UPCOMING',
 };
