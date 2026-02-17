@@ -179,5 +179,37 @@
   "academyTitle4": "Возражения и ограничения",
   "academyDesc4": "Ответы на вопросы, правовые ограничения.",
   "academyTitle5": "Руководство по бренду",
-  "academyDesc5": "Правила бренда, шаблоны, тон коммуникации."
+  "academyDesc5": "Правила бренда, шаблоны, тон коммуникации.",
+
+  "purchaseSuccessful": "Покупка выполнена!",
+  "operationFailed": "Не удалось выполнить операцию",
+  "enterValidAmount": "Введите корректную сумму",
+  "topUp": "Пополнить",
+  "amountEur": "Сумма (EUR)",
+  "visaMastercard": "Visa, Mastercard",
+  "btcEthUsdt": "BTC, ETH, USDT",
+  "pay": "Оплатить",
+  "pricePerShare": "{price} EUR/доля",
+  "@pricePerShare": { "placeholders": { "price": { "type": "String" } } },
+  "availableShares": "Доступно: {count}",
+  "@availableShares": { "placeholders": { "count": { "type": "int" } } },
+  "availableBalance": "Доступно: {amount} EUR",
+  "@availableBalance": { "placeholders": { "amount": { "type": "String" } } },
+  "roomFloor": "Комната {room} | Этаж {floor}",
+  "@roomFloor": { "placeholders": { "room": { "type": "String" }, "floor": { "type": "int" } } },
+
+  "enable2FA": "Включить двухфакторную аутентификацию",
+  "scanQrCode": "Отсканируйте QR-код в приложении-аутентификаторе (Google Authenticator, Authy и т.д.)",
+  "enterKeyManually": "Или введите ключ вручную:",
+  "secretCopied": "Ключ скопирован",
+  "enter6DigitCode": "Введите 6-значный код",
+  "verifyAndEnable": "Подтвердить и включить",
+  "twoFAEnabledSuccess": "2FA успешно включена",
+  "invalidCodeTryAgain": "Неверный код. Попробуйте ещё раз.",
+
+  "disable2FA": "Отключить двухфакторную аутентификацию",
+  "enterCurrentCode": "Введите текущий код из приложения-аутентификатора для отключения 2FA.",
+  "disable": "Отключить",
+  "twoFADisabled": "2FA отключена",
+  "invalidCode": "Неверный код"
 }

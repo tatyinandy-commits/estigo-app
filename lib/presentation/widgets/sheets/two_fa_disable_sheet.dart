@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../domain/providers/api_providers.dart';
@@ -19,9 +20,10 @@ class _TwoFaDisableSheetState extends ConsumerState<TwoFaDisableSheet> {
   String? _error;
 
   Future<void> _disable() async {
+    final l = S.of(context);
     final code = _codeController.text.trim();
     if (code.length != 6) {
-      setState(() => _error = 'Enter 6-digit code');
+      setState(() => _error = l?.enter6DigitCode ?? 'Enter 6-digit code');
       return;
     }
 
@@ -40,15 +42,16 @@ class _TwoFaDisableSheetState extends ConsumerState<TwoFaDisableSheet> {
       }
       if (mounted) {
         Navigator.of(context).pop(true);
+        final l = S.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('2FA disabled'),
+          SnackBar(
+            content: Text(l?.twoFADisabled ?? '2FA disabled'),
             backgroundColor: AppColors.warning,
           ),
         );
       }
     } catch (e) {
-      setState(() => _error = 'Invalid code');
+      setState(() => _error = l?.invalidCode ?? 'Invalid code');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -62,6 +65,7 @@ class _TwoFaDisableSheetState extends ConsumerState<TwoFaDisableSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l = S.of(context);
     return Padding(
       padding: EdgeInsets.only(
         left: 24,
@@ -86,16 +90,16 @@ class _TwoFaDisableSheetState extends ConsumerState<TwoFaDisableSheet> {
           const SizedBox(height: 12),
 
           Text(
-            'Disable Two-Factor Auth',
+            l?.disable2FA ?? 'Disable Two-Factor Auth',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
-            'Enter the current code from your authenticator app to disable 2FA.',
+          Text(
+            l?.enterCurrentCode ?? 'Enter the current code from your authenticator app to disable 2FA.',
             textAlign: TextAlign.center,
-            style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+            style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
           ),
           const SizedBox(height: 24),
 
@@ -107,7 +111,7 @@ class _TwoFaDisableSheetState extends ConsumerState<TwoFaDisableSheet> {
             style: const TextStyle(fontSize: 24, letterSpacing: 8, fontWeight: FontWeight.bold),
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             decoration: InputDecoration(
-              labelText: 'Enter 6-digit code',
+              labelText: l?.enter6DigitCode ?? 'Enter 6-digit code',
               counterText: '',
               errorText: _error,
             ),
@@ -119,7 +123,7 @@ class _TwoFaDisableSheetState extends ConsumerState<TwoFaDisableSheet> {
               Expanded(
                 child: OutlinedButton(
                   onPressed: () => Navigator.of(context).pop(false),
-                  child: const Text('Cancel'),
+                  child: Text(l?.cancel ?? 'Cancel'),
                 ),
               ),
               const SizedBox(width: 12),
@@ -133,7 +137,7 @@ class _TwoFaDisableSheetState extends ConsumerState<TwoFaDisableSheet> {
                           height: 20,
                           child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                         )
-                      : const Text('Disable'),
+                      : Text(l?.disable ?? 'Disable'),
                 ),
               ),
             ],

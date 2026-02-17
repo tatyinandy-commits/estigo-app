@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/app_theme.dart';
@@ -17,10 +18,11 @@ class _DepositSheetState extends ConsumerState<DepositSheet> {
   bool _loading = false;
 
   Future<void> _submit() async {
+    final l = S.of(context);
     final amount = double.tryParse(_amountController.text);
     if (amount == null || amount <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Enter a valid amount')),
+        SnackBar(content: Text(l?.enterValidAmount ?? 'Enter a valid amount')),
       );
       return;
     }
@@ -57,8 +59,9 @@ class _DepositSheetState extends ConsumerState<DepositSheet> {
       if (mounted) Navigator.pop(context);
     } catch (e) {
       if (mounted) {
+        final l = S.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error),
+          SnackBar(content: Text(l?.operationFailed ?? 'Operation failed'), backgroundColor: AppColors.error),
         );
       }
     } finally {
@@ -74,6 +77,7 @@ class _DepositSheetState extends ConsumerState<DepositSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l = S.of(context);
     return Padding(
       padding: EdgeInsets.only(
         left: 24,
@@ -96,30 +100,30 @@ class _DepositSheetState extends ConsumerState<DepositSheet> {
             ),
           ),
           const SizedBox(height: 16),
-          Text('Top Up Balance', style: Theme.of(context).textTheme.titleLarge),
+          Text(l?.topUpBalance ?? 'Top Up Balance', style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 24),
           TextFormField(
             controller: _amountController,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: const InputDecoration(
-              labelText: 'Amount (EUR)',
-              prefixIcon: Icon(Icons.euro),
+            decoration: InputDecoration(
+              labelText: l?.amountEur ?? 'Amount (EUR)',
+              prefixIcon: const Icon(Icons.euro),
             ),
           ),
           const SizedBox(height: 16),
-          const Text('Payment Method', style: TextStyle(fontWeight: FontWeight.w500)),
+          Text(l?.paymentMethod ?? 'Payment Method', style: const TextStyle(fontWeight: FontWeight.w500)),
           const SizedBox(height: 8),
           _MethodTile(
-            title: 'Bank Card',
-            subtitle: 'Visa, Mastercard',
+            title: l?.bankCard ?? 'Bank Card',
+            subtitle: l?.visaMastercard ?? 'Visa, Mastercard',
             icon: Icons.credit_card,
             selected: _method == 'stripe',
             onTap: () => setState(() => _method = 'stripe'),
           ),
           const SizedBox(height: 8),
           _MethodTile(
-            title: 'Cryptocurrency',
-            subtitle: 'BTC, ETH, USDT',
+            title: l?.crypto ?? 'Cryptocurrency',
+            subtitle: l?.btcEthUsdt ?? 'BTC, ETH, USDT',
             icon: Icons.currency_bitcoin,
             selected: _method == 'crypto',
             onTap: () => setState(() => _method = 'crypto'),
@@ -133,7 +137,7 @@ class _DepositSheetState extends ConsumerState<DepositSheet> {
                     height: 20,
                     child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                   )
-                : const Text('Top Up'),
+                : Text(l?.topUp ?? 'Top Up'),
           ),
         ],
       ),

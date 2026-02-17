@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -87,16 +88,16 @@ class _IncomeScreenState extends ConsumerState<IncomeScreen> with SingleTickerPr
                         borderData: FlBorderData(show: false),
                         gridData: const FlGridData(show: false),
                       )),
-                    ),
+                    ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.04, end: 0, duration: 400.ms),
                     const SizedBox(height: 16),
-                    ...accruals.map((a) => Card(
+                    ...accruals.asMap().entries.map((entry) => Card(
                       margin: const EdgeInsets.only(bottom: 8),
                       child: ListTile(
-                        title: Text(a.month),
-                        subtitle: Text('Revenue: ${a.revenue.toStringAsFixed(0)} | Expenses: ${a.expenses.toStringAsFixed(0)}'),
-                        trailing: Text('+${a.distributedPerShare.toStringAsFixed(2)} EUR/share', style: const TextStyle(color: AppColors.success, fontWeight: FontWeight.bold)),
+                        title: Text(entry.value.month),
+                        subtitle: Text('Revenue: ${entry.value.revenue.toStringAsFixed(0)} | Expenses: ${entry.value.expenses.toStringAsFixed(0)}'),
+                        trailing: Text('+${entry.value.distributedPerShare.toStringAsFixed(2)} EUR/share', style: const TextStyle(color: AppColors.success, fontWeight: FontWeight.bold)),
                       ),
-                    )),
+                    ).animate().fadeIn(duration: 300.ms, delay: (100 + entry.key * 60).ms).slideY(begin: 0.03, end: 0, duration: 300.ms, delay: (100 + entry.key * 60).ms)),
                     const SizedBox(height: 12),
                     Text('Total: ${total.toStringAsFixed(2)} EUR/share', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16), textAlign: TextAlign.center),
                   ],
@@ -223,7 +224,10 @@ class _WithdrawSheetState extends ConsumerState<_WithdrawSheet> {
       await ref.read(transactionApiProvider).requestPayout(amount: amount, iban: _ibanC.text, recipientName: _nameC.text);
       if (mounted) Navigator.pop(context);
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      if (mounted) {
+        final l = S.of(context);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l?.operationFailed ?? 'Operation failed')));
+      }
     } finally { setState(() => _loading = false); }
   }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -53,13 +54,13 @@ class PortfolioScreen extends ConsumerWidget {
                   Expanded(child: StatCard(title: l?.invested ?? 'Invested', value: '${totalInvested.toStringAsFixed(0)} EUR', icon: Icons.arrow_upward, color: AppColors.info)),
                   const SizedBox(width: 12),
                   Expanded(child: StatCard(title: l?.currentValue ?? 'Value', value: '${totalValue.toStringAsFixed(0)} EUR', icon: Icons.trending_up, color: AppColors.success)),
-                ]),
+                ]).animate().fadeIn(duration: 400.ms).slideY(begin: 0.05, end: 0, duration: 400.ms),
                 const SizedBox(height: 12),
                 Row(children: [
                   Expanded(child: StatCard(title: l?.totalIncome ?? 'Income', value: '${totalIncome.toStringAsFixed(0)} EUR', icon: Icons.monetization_on, color: AppColors.gold)),
                   const SizedBox(width: 12),
                   Expanded(child: StatCard(title: l?.unrealizedGain ?? 'Gain', value: '${gain >= 0 ? "+" : ""}${gain.toStringAsFixed(0)} EUR', icon: Icons.show_chart, color: gain >= 0 ? AppColors.success : AppColors.error)),
-                ]),
+                ]).animate().fadeIn(duration: 400.ms, delay: 100.ms).slideY(begin: 0.05, end: 0, duration: 400.ms, delay: 100.ms),
                 const SizedBox(height: 24),
 
                 // Pie chart
@@ -88,7 +89,8 @@ class PortfolioScreen extends ConsumerWidget {
                 // Positions
                 Text(l?.positions ?? 'Positions', style: Theme.of(context).textTheme.titleLarge),
                 const SizedBox(height: 12),
-                ...shares.map((s) {
+                ...shares.asMap().entries.map((entry) {
+                  final s = entry.value;
                   final profit = s.currentValue - s.purchasePrice;
                   return Card(
                     margin: const EdgeInsets.only(bottom: 12),
@@ -124,7 +126,7 @@ class PortfolioScreen extends ConsumerWidget {
                         ],
                       ),
                     ),
-                  );
+                  ).animate().fadeIn(duration: 400.ms, delay: (200 + entry.key * 80).ms).slideY(begin: 0.03, end: 0, duration: 400.ms, delay: (200 + entry.key * 80).ms);
                 }),
               ],
             );

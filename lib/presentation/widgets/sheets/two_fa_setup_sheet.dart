@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../../../core/theme/app_theme.dart';
@@ -27,9 +28,10 @@ class _TwoFaSetupSheetState extends ConsumerState<TwoFaSetupSheet> {
   String? _error;
 
   Future<void> _verify() async {
+    final l = S.of(context);
     final code = _codeController.text.trim();
     if (code.length != 6) {
-      setState(() => _error = 'Enter 6-digit code');
+      setState(() => _error = l?.enter6DigitCode ?? 'Enter 6-digit code');
       return;
     }
 
@@ -49,15 +51,16 @@ class _TwoFaSetupSheetState extends ConsumerState<TwoFaSetupSheet> {
       }
       if (mounted) {
         Navigator.of(context).pop(true);
+        final l = S.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('2FA enabled successfully'),
+          SnackBar(
+            content: Text(l?.twoFAEnabledSuccess ?? '2FA enabled successfully'),
             backgroundColor: AppColors.success,
           ),
         );
       }
     } catch (e) {
-      setState(() => _error = 'Invalid code. Please try again.');
+      setState(() => _error = l?.invalidCodeTryAgain ?? 'Invalid code. Please try again.');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -71,6 +74,7 @@ class _TwoFaSetupSheetState extends ConsumerState<TwoFaSetupSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l = S.of(context);
     return Padding(
       padding: EdgeInsets.only(
         left: 24,
@@ -94,16 +98,16 @@ class _TwoFaSetupSheetState extends ConsumerState<TwoFaSetupSheet> {
             const SizedBox(height: 20),
 
             Text(
-              'Enable Two-Factor Auth',
+              l?.enable2FA ?? 'Enable Two-Factor Auth',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'Scan QR code with your authenticator app (Google Authenticator, Authy, etc.)',
+            Text(
+              l?.scanQrCode ?? 'Scan QR code with your authenticator app (Google Authenticator, Authy, etc.)',
               textAlign: TextAlign.center,
-              style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+              style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
             ),
             const SizedBox(height: 24),
 
@@ -124,16 +128,17 @@ class _TwoFaSetupSheetState extends ConsumerState<TwoFaSetupSheet> {
             const SizedBox(height: 16),
 
             // Secret key with copy
-            const Text(
-              'Or enter this key manually:',
-              style: TextStyle(color: AppColors.textMuted, fontSize: 12),
+            Text(
+              l?.enterKeyManually ?? 'Or enter this key manually:',
+              style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
             ),
             const SizedBox(height: 8),
             GestureDetector(
               onTap: () {
                 Clipboard.setData(ClipboardData(text: widget.secret));
+                final l = S.of(context);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Secret copied to clipboard')),
+                  SnackBar(content: Text(l?.secretCopied ?? 'Secret copied to clipboard')),
                 );
               },
               child: Container(
@@ -174,7 +179,7 @@ class _TwoFaSetupSheetState extends ConsumerState<TwoFaSetupSheet> {
               style: const TextStyle(fontSize: 24, letterSpacing: 8, fontWeight: FontWeight.bold),
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
               decoration: InputDecoration(
-                labelText: 'Enter 6-digit code',
+                labelText: l?.enter6DigitCode ?? 'Enter 6-digit code',
                 counterText: '',
                 errorText: _error,
               ),
@@ -191,7 +196,7 @@ class _TwoFaSetupSheetState extends ConsumerState<TwoFaSetupSheet> {
                         height: 20,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Text('Verify & Enable'),
+                    : Text(l?.verifyAndEnable ?? 'Verify & Enable'),
               ),
             ),
           ],

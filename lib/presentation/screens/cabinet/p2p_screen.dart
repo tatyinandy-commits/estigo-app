@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
@@ -88,7 +89,8 @@ class _AllOrdersTab extends ConsumerWidget {
           return ListView.builder(
             padding: const EdgeInsets.all(16),
             itemCount: active.length,
-            itemBuilder: (_, i) => _OrderCard(order: active[i], showAction: true),
+            itemBuilder: (_, i) => _OrderCard(order: active[i], showAction: true)
+                .animate().fadeIn(duration: 400.ms, delay: (i * 80).ms).slideY(begin: 0.03, end: 0, duration: 400.ms, delay: (i * 80).ms),
           );
         },
       ),
@@ -117,7 +119,8 @@ class _MyOrdersTab extends ConsumerWidget {
           return ListView.builder(
             padding: const EdgeInsets.all(16),
             itemCount: orders.length,
-            itemBuilder: (_, i) => _OrderCard(order: orders[i], showCancel: true),
+            itemBuilder: (_, i) => _OrderCard(order: orders[i], showCancel: true)
+                .animate().fadeIn(duration: 400.ms, delay: (i * 80).ms).slideY(begin: 0.03, end: 0, duration: 400.ms, delay: (i * 80).ms),
           );
         },
       ),
@@ -175,7 +178,8 @@ class _OrderCard extends ConsumerWidget {
                       ref.invalidate(portfolioProvider);
                     } catch (e) {
                       if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+                        final l = S.of(context);
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l?.operationFailed ?? 'Operation failed')));
                       }
                     }
                   },
@@ -249,7 +253,10 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
       ref.invalidate(p2pOrdersProvider);
       if (mounted) Navigator.pop(context);
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      if (mounted) {
+        final l = S.of(context);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l?.operationFailed ?? 'Operation failed')));
+      }
     } finally {
       setState(() => _loading = false);
     }

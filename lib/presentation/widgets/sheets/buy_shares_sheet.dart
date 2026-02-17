@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/app_theme.dart';
@@ -23,6 +24,7 @@ class _BuySharesSheetState extends ConsumerState<BuySharesSheet> {
   double get _total => _shares * widget.room.sharePrice;
 
   Future<void> _buy() async {
+    final l = S.of(context);
     setState(() => _loading = true);
     try {
       if (_method == 'balance') {
@@ -33,7 +35,7 @@ class _BuySharesSheetState extends ConsumerState<BuySharesSheet> {
         if (mounted) {
           Navigator.pop(context);
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Purchase successful!'), backgroundColor: AppColors.success),
+            SnackBar(content: Text(l?.purchaseSuccessful ?? 'Purchase successful!'), backgroundColor: AppColors.success),
           );
         }
       } else if (_method == 'stripe') {
@@ -66,8 +68,9 @@ class _BuySharesSheetState extends ConsumerState<BuySharesSheet> {
       }
     } catch (e) {
       if (mounted) {
+        final l = S.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error),
+          SnackBar(content: Text(l?.operationFailed ?? 'Operation failed'), backgroundColor: AppColors.error),
         );
       }
     } finally {
@@ -77,6 +80,7 @@ class _BuySharesSheetState extends ConsumerState<BuySharesSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l = S.of(context);
     final user = ref.watch(authProvider).user;
     final balance = user?.balance ?? 0;
 
@@ -103,15 +107,15 @@ class _BuySharesSheetState extends ConsumerState<BuySharesSheet> {
           ),
           const SizedBox(height: 16),
           Text(
-            _step == 1 ? 'Buy Shares' : 'Payment Method',
+            _step == 1 ? (l?.buyShares ?? 'Buy Shares') : (l?.paymentMethod ?? 'Payment Method'),
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 16),
           Text(
-            'Room ${widget.room.number} | Floor ${widget.room.floor}',
+            l?.roomFloor(widget.room.number, widget.room.floor) ?? 'Room ${widget.room.number} | Floor ${widget.room.floor}',
             style: const TextStyle(color: AppColors.textMuted),
           ),
-          Text('Price: ${widget.room.sharePrice.toStringAsFixed(0)} EUR/share'),
+          Text(l?.pricePerShare(widget.room.sharePrice.toStringAsFixed(0)) ?? 'Price: ${widget.room.sharePrice.toStringAsFixed(0)} EUR/share'),
           const SizedBox(height: 16),
 
           if (_step == 1) ...[
@@ -133,7 +137,7 @@ class _BuySharesSheetState extends ConsumerState<BuySharesSheet> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Available: ${widget.room.availableShares}',
+              l?.availableShares(widget.room.availableShares) ?? 'Available: ${widget.room.availableShares}',
               style: const TextStyle(color: AppColors.textMuted),
               textAlign: TextAlign.center,
             ),
@@ -147,7 +151,7 @@ class _BuySharesSheetState extends ConsumerState<BuySharesSheet> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Total:', style: TextStyle(fontWeight: FontWeight.w600)),
+                  Text(l?.total ?? 'Total:', style: const TextStyle(fontWeight: FontWeight.w600)),
                   Text(
                     '${_total.toStringAsFixed(0)} EUR',
                     style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.gold),
@@ -158,21 +162,21 @@ class _BuySharesSheetState extends ConsumerState<BuySharesSheet> {
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: () => setState(() => _step = 2),
-              child: const Text('Next'),
+              child: Text(l?.next ?? 'Next'),
             ),
           ] else ...[
-            _buildMethodOption('balance', 'Balance', 'Available: ${balance.toStringAsFixed(0)} EUR', Icons.account_balance_wallet),
+            _buildMethodOption('balance', l?.balance ?? 'Balance', l?.availableBalance(balance.toStringAsFixed(0)) ?? 'Available: ${balance.toStringAsFixed(0)} EUR', Icons.account_balance_wallet),
             const SizedBox(height: 8),
-            _buildMethodOption('stripe', 'Bank Card', 'Visa, Mastercard', Icons.credit_card),
+            _buildMethodOption('stripe', l?.bankCard ?? 'Bank Card', l?.visaMastercard ?? 'Visa, Mastercard', Icons.credit_card),
             const SizedBox(height: 8),
-            _buildMethodOption('crypto', 'Crypto', 'BTC, ETH, USDT', Icons.currency_bitcoin),
+            _buildMethodOption('crypto', l?.crypto ?? 'Crypto', l?.btcEthUsdt ?? 'BTC, ETH, USDT', Icons.currency_bitcoin),
             const SizedBox(height: 24),
             Row(
               children: [
                 Expanded(
                   child: OutlinedButton(
                     onPressed: () => setState(() => _step = 1),
-                    child: const Text('Back'),
+                    child: Text(l?.back ?? 'Back'),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -181,7 +185,7 @@ class _BuySharesSheetState extends ConsumerState<BuySharesSheet> {
                     onPressed: _loading ? null : _buy,
                     child: _loading
                         ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                        : const Text('Pay'),
+                        : Text(l?.pay ?? 'Pay'),
                   ),
                 ),
               ],

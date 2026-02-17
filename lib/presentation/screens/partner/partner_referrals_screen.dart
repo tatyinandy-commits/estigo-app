@@ -15,37 +15,45 @@ class PartnerReferralsScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(title: Text(l?.referrals ?? 'Referrals')),
-      body: partnerAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => ErrorView(message: e.toString(), onRetry: () => ref.invalidate(partnerDataProvider)),
-        data: (partner) {
-          if (partner.referrals.isEmpty) {
-            return Center(child: Text(l?.noReferralsYet ?? 'No referrals yet', style: const TextStyle(color: AppColors.textMuted)));
-          }
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: partner.referrals.length,
-            itemBuilder: (_, i) {
-              final r = partner.referrals[i];
-              return Card(
-                margin: const EdgeInsets.only(bottom: 8),
-                child: ListTile(
-                  leading: CircleAvatar(child: Text(r.name[0].toUpperCase())),
-                  title: Text(r.name),
-                  subtitle: Text('${l?.registered ?? 'Registered'}: ${r.registeredAt.substring(0, 10)}'),
-                  trailing: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text('${r.invested.toStringAsFixed(0)} EUR', style: const TextStyle(fontWeight: FontWeight.bold)),
-                      Text('+${r.commission.toStringAsFixed(0)} EUR', style: const TextStyle(color: AppColors.success, fontSize: 12)),
-                    ],
-                  ),
-                ),
+      body: RefreshIndicator(
+        onRefresh: () async => ref.invalidate(partnerDataProvider),
+        child: partnerAsync.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (e, _) => ErrorView(message: e.toString(), onRetry: () => ref.invalidate(partnerDataProvider)),
+          data: (partner) {
+            if (partner.referrals.isEmpty) {
+              return ListView(
+                children: [
+                  const SizedBox(height: 200),
+                  Center(child: Text(l?.noReferralsYet ?? 'No referrals yet', style: const TextStyle(color: AppColors.textMuted))),
+                ],
               );
-            },
-          );
-        },
+            }
+            return ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: partner.referrals.length,
+              itemBuilder: (_, i) {
+                final r = partner.referrals[i];
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  child: ListTile(
+                    leading: CircleAvatar(child: Text(r.name[0].toUpperCase())),
+                    title: Text(r.name),
+                    subtitle: Text('${l?.registered ?? 'Registered'}: ${r.registeredAt.substring(0, 10)}'),
+                    trailing: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text('${r.invested.toStringAsFixed(0)} EUR', style: const TextStyle(fontWeight: FontWeight.bold)),
+                        Text('+${r.commission.toStringAsFixed(0)} EUR', style: const TextStyle(color: AppColors.success, fontSize: 12)),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            );
+          },
+        ),
       ),
     );
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:local_auth/local_auth.dart';
@@ -56,10 +57,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with SingleTick
       body: TabBarView(
         controller: _tab,
         children: [
-          _ProfileTab(),
-          _SecurityTab(),
-          _NotificationsTab(),
-          _VerificationTab(),
+          _ProfileTab().animate().fadeIn(duration: 400.ms).slideY(begin: 0.03, end: 0, duration: 400.ms),
+          _SecurityTab().animate().fadeIn(duration: 400.ms).slideY(begin: 0.03, end: 0, duration: 400.ms),
+          _NotificationsTab().animate().fadeIn(duration: 400.ms).slideY(begin: 0.03, end: 0, duration: 400.ms),
+          _VerificationTab().animate().fadeIn(duration: 400.ms).slideY(begin: 0.03, end: 0, duration: 400.ms),
         ],
       ),
     );
@@ -95,7 +96,10 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
       ref.read(authProvider.notifier).updateUser(updated);
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Saved'), backgroundColor: AppColors.success));
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      if (mounted) {
+        final l = S.of(context);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l?.operationFailed ?? 'Operation failed')));
+      }
     } finally {
       setState(() => _loading = false);
     }
@@ -105,7 +109,12 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
   Widget build(BuildContext context) {
     final l = S.of(context);
     final user = ref.watch(authProvider).user;
-    return ListView(padding: const EdgeInsets.all(24), children: [
+    return RefreshIndicator(
+      onRefresh: () async {
+        final user = await ref.read(authApiProvider).getMe();
+        ref.read(authProvider.notifier).updateUser(user);
+      },
+      child: ListView(padding: const EdgeInsets.all(24), children: [
       TextFormField(controller: _nameC, decoration: const InputDecoration(labelText: 'Full Name')),
       const SizedBox(height: 16),
       TextFormField(enabled: false, initialValue: user?.email ?? '', decoration: const InputDecoration(labelText: 'Email')),
@@ -141,7 +150,8 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
             ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
             : Text(l?.save ?? 'Save Changes'),
       ),
-    ]);
+    ]),
+    );
   }
 }
 
@@ -222,7 +232,10 @@ class _SecurityTabState extends ConsumerState<_SecurityTab> {
         );
       }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      if (mounted) {
+        final l = S.of(context);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l?.operationFailed ?? 'Operation failed')));
+      }
     } finally {
       setState(() => _loading = false);
     }
@@ -256,8 +269,9 @@ class _SecurityTabState extends ConsumerState<_SecurityTab> {
         }
       } catch (e) {
         if (mounted) {
+          final l = S.of(context);
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to setup 2FA: $e')),
+            SnackBar(content: Text(l?.operationFailed ?? 'Operation failed')),
           );
         }
       } finally {
@@ -272,7 +286,13 @@ class _SecurityTabState extends ConsumerState<_SecurityTab> {
     final user = ref.watch(authProvider).user;
     final sessionsAsync = ref.watch(sessionsProvider);
 
-    return ListView(padding: const EdgeInsets.all(24), children: [
+    return RefreshIndicator(
+      onRefresh: () async {
+        ref.invalidate(sessionsProvider);
+        final user = await ref.read(authApiProvider).getMe();
+        ref.read(authProvider.notifier).updateUser(user);
+      },
+      child: ListView(padding: const EdgeInsets.all(24), children: [
       // ── Change Password ──
       Text(l?.changePassword ?? 'Change Password', style: Theme.of(context).textTheme.titleLarge),
       const SizedBox(height: 16),
@@ -364,7 +384,8 @@ class _SecurityTabState extends ConsumerState<_SecurityTab> {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, __) => const Text('Failed to load sessions'),
       ),
-    ]);
+    ]),
+    );
   }
 
   IconData _sessionIcon(String device) {
@@ -498,8 +519,9 @@ class _VerificationTabState extends ConsumerState<_VerificationTab> {
       }
     } catch (e) {
       if (mounted) {
+        final l = S.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to start verification: $e')),
+          SnackBar(content: Text(l?.operationFailed ?? 'Operation failed')),
         );
       }
     } finally {

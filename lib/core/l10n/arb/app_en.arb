@@ -179,5 +179,37 @@
   "academyTitle4": "Objections & Limitations",
   "academyDesc4": "Answering questions, legal limitations.",
   "academyTitle5": "Brand Guide",
-  "academyDesc5": "Brand rules, templates, tone of voice."
+  "academyDesc5": "Brand rules, templates, tone of voice.",
+
+  "purchaseSuccessful": "Purchase successful!",
+  "operationFailed": "Operation failed",
+  "enterValidAmount": "Enter a valid amount",
+  "topUp": "Top Up",
+  "amountEur": "Amount (EUR)",
+  "visaMastercard": "Visa, Mastercard",
+  "btcEthUsdt": "BTC, ETH, USDT",
+  "pay": "Pay",
+  "pricePerShare": "{price} EUR/share",
+  "@pricePerShare": { "placeholders": { "price": { "type": "String" } } },
+  "availableShares": "Available: {count}",
+  "@availableShares": { "placeholders": { "count": { "type": "int" } } },
+  "availableBalance": "Available: {amount} EUR",
+  "@availableBalance": { "placeholders": { "amount": { "type": "String" } } },
+  "roomFloor": "Room {room} | Floor {floor}",
+  "@roomFloor": { "placeholders": { "room": { "type": "String" }, "floor": { "type": "int" } } },
+
+  "enable2FA": "Enable Two-Factor Auth",
+  "scanQrCode": "Scan QR code with your authenticator app (Google Authenticator, Authy, etc.)",
+  "enterKeyManually": "Or enter this key manually:",
+  "secretCopied": "Secret copied to clipboard",
+  "enter6DigitCode": "Enter 6-digit code",
+  "verifyAndEnable": "Verify & Enable",
+  "twoFAEnabledSuccess": "2FA enabled successfully",
+  "invalidCodeTryAgain": "Invalid code. Please try again.",
+
+  "disable2FA": "Disable Two-Factor Auth",
+  "enterCurrentCode": "Enter the current code from your authenticator app to disable 2FA.",
+  "disable": "Disable",
+  "twoFADisabled": "2FA disabled",
+  "invalidCode": "Invalid code"
 }
