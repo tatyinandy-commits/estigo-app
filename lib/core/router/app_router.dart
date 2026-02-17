@@ -29,18 +29,31 @@ import '../../presentation/shell/cabinet_shell.dart';
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
 
+/// Listenable that notifies GoRouter when auth state changes.
+class _AuthNotifierListenable extends ChangeNotifier {
+  _AuthNotifierListenable(Ref ref) {
+    ref.listen(authProvider, (_, __) => notifyListeners());
+  }
+}
+
 final routerProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authProvider);
+  final refreshListenable = _AuthNotifierListenable(ref);
 
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: '/',
+    refreshListenable: refreshListenable,
     redirect: (context, state) {
+      final authState = ref.read(authProvider);
       final isAuth = authState.isAuthenticated;
+      final isInitial = authState.status == AuthStatus.initial;
       final path = state.matchedLocation;
 
-      // Public routes
-      final publicRoutes = [
+      // While auth is initializing, stay on splash
+      if (isInitial && path == '/') return null;
+
+      // Public routes that don't require auth
+      const publicRoutes = [
         '/',
         '/onboarding',
         '/login',
@@ -48,14 +61,18 @@ final routerProvider = Provider<GoRouter>((ref) {
         '/forgot-password',
         '/reset-password',
         '/verify-email',
+        '/2fa',
       ];
 
-      if (path == '/') return null; // Splash handles its own logic
+      // Splash handles its own navigation
+      if (path == '/') return null;
 
+      // Not authenticated → can only visit public routes
       if (!isAuth && !publicRoutes.contains(path)) {
         return '/login';
       }
 
+      // Authenticated → redirect away from auth pages (but not splash)
       if (isAuth && publicRoutes.contains(path) && path != '/') {
         return '/cabinet';
       }

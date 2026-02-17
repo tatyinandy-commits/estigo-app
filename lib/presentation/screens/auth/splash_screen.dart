@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -14,35 +16,63 @@ class SplashScreen extends ConsumerStatefulWidget {
 }
 
 class _SplashScreenState extends ConsumerState<SplashScreen> {
+  bool _navigated = false;
+
   @override
   void initState() {
     super.initState();
-    _initialize();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _initialize());
+  }
+
+  void _navigate(String route) {
+    debugPrint('Splash: _navigate($route), _navigated=$_navigated, mounted=$mounted');
+    if (_navigated || !mounted) return;
+    _navigated = true;
+    debugPrint('Splash: calling context.go($route)');
+    context.go(route);
+    debugPrint('Splash: context.go done');
   }
 
   Future<void> _initialize() async {
-    await ref.read(authProvider.notifier).initialize();
+    // Safety timeout — navigate to onboarding if init takes too long
+    final timer = Timer(const Duration(seconds: 5), () {
+      debugPrint('Splash: timeout, navigating to /onboarding');
+      _navigate('/onboarding');
+    });
 
-    if (!mounted) return;
+    try {
+      await ref.read(authProvider.notifier).initialize();
+    } catch (e) {
+      debugPrint('Splash: auth init error: $e');
+    }
+
+    timer.cancel();
+    if (_navigated || !mounted) return;
 
     final auth = ref.read(authProvider);
+    debugPrint('Splash: auth status = ${auth.status}');
+
     if (auth.isAuthenticated) {
-      // Check biometric lock
-      final biometricEnabled = await SecureStorage.isBiometricEnabled();
-      if (biometricEnabled) {
-        final didAuth = await _authenticateBiometric();
-        if (!didAuth) {
-          // User failed biometric — send to login
-          if (mounted) context.go('/login');
-          return;
-        }
+      // Check biometric lock (skip on web)
+      if (!kIsWeb) {
+        try {
+          final biometricEnabled = await SecureStorage.isBiometricEnabled();
+          if (biometricEnabled) {
+            final didAuth = await _authenticateBiometric();
+            if (!didAuth) {
+              _navigate('/login');
+              return;
+            }
+          }
+        } catch (_) {}
       }
-      if (mounted) context.go('/cabinet');
+      _navigate('/cabinet');
     } else {
-      final seen = await SecureStorage.isOnboardingSeen();
-      if (mounted) {
-        context.go(seen ? '/login' : '/onboarding');
-      }
+      bool seen = false;
+      try {
+        seen = await SecureStorage.isOnboardingSeen();
+      } catch (_) {}
+      _navigate(seen ? '/login' : '/onboarding');
     }
   }
 
@@ -50,7 +80,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     final auth = LocalAuthentication();
     try {
       final canCheck = await auth.canCheckBiometrics || await auth.isDeviceSupported();
-      if (!canCheck) return true; // skip if not available
+      if (!canCheck) return true;
 
       return await auth.authenticate(
         localizedReason: 'Authenticate to access Estigo',
@@ -60,7 +90,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
         ),
       );
     } catch (_) {
-      return true; // on error, allow through
+      return true;
     }
   }
 

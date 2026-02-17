@@ -9,35 +9,20 @@ import 'core/l10n/l10n.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await SentryFlutter.init(
-    (options) {
-      options.dsn = Env.sentryDsn;
-      options.environment = Env.isProduction ? 'production' : 'development';
-      options.tracesSampleRate = 0.2;
-    },
-    appRunner: () => runApp(
-      const ProviderScope(child: EstigoApp()),
-    ),
-  );
+  await SentryFlutter.init((options) {
+    options.dsn = Env.sentryDsn;
+    options.environment = Env.isProduction ? 'production' : 'development';
+    options.tracesSampleRate = 0.2;
+  });
+
+  runApp(const ProviderScope(child: EstigoApp()));
 }
 
-class EstigoApp extends ConsumerStatefulWidget {
+class EstigoApp extends ConsumerWidget {
   const EstigoApp({super.key});
 
   @override
-  ConsumerState<EstigoApp> createState() => _EstigoAppState();
-}
-
-class _EstigoAppState extends ConsumerState<EstigoApp> {
-  @override
-  void initState() {
-    super.initState();
-    // Push notifications will be initialized after login
-    // via PushNotificationService.initialize() in AuthNotifier
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
     final locale = ref.watch(localeProvider);
     final themeMode = ref.watch(themeModeProvider);
