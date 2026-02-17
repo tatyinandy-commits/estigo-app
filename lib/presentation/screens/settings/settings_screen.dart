@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:local_auth/local_auth.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/l10n/l10n.dart';
+import '../../../core/storage/secure_storage.dart';
+import '../../../data/models/user.dart';
 import '../../../domain/providers/auth_provider.dart';
 import '../../../domain/providers/api_providers.dart';
 import '../../../domain/providers/data_providers.dart';
+import '../../widgets/sheets/two_fa_setup_sheet.dart';
+import '../../widgets/sheets/two_fa_disable_sheet.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -57,6 +63,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with SingleTick
   }
 }
 
+// ─────────────────────────────────────────────
+// Profile Tab
+// ─────────────────────────────────────────────
+
 class _ProfileTab extends ConsumerStatefulWidget {
   @override
   ConsumerState<_ProfileTab> createState() => _ProfileTabState();
@@ -83,7 +93,9 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Saved'), backgroundColor: AppColors.success));
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
-    } finally { setState(() => _loading = false); }
+    } finally {
+      setState(() => _loading = false);
+    }
   }
 
   @override
@@ -105,7 +117,9 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
             DropdownMenuItem(value: 'ru', child: Text('Русский')),
             DropdownMenuItem(value: 'en', child: Text('English')),
           ],
-          onChanged: (v) { if (v != null) ref.read(localeProvider.notifier).setLocale(v); },
+          onChanged: (v) {
+            if (v != null) ref.read(localeProvider.notifier).setLocale(v);
+          },
         ),
       ),
       // Theme
@@ -117,10 +131,19 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
         ),
       ),
       const SizedBox(height: 24),
-      ElevatedButton(onPressed: _loading ? null : _save, child: _loading ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) : const Text('Save Changes')),
+      ElevatedButton(
+        onPressed: _loading ? null : _save,
+        child: _loading
+            ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+            : const Text('Save Changes'),
+      ),
     ]);
   }
 }
+
+// ─────────────────────────────────────────────
+// Security Tab — Password, 2FA, Biometrics, Sessions
+// ─────────────────────────────────────────────
 
 class _SecurityTab extends ConsumerStatefulWidget {
   @override
@@ -132,18 +155,111 @@ class _SecurityTabState extends ConsumerState<_SecurityTab> {
   final _newC = TextEditingController();
   final _confirmC = TextEditingController();
   bool _loading = false;
+  bool _twoFaLoading = false;
+  bool _biometricAvailable = false;
+  bool _biometricEnabled = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkBiometric();
+  }
+
+  Future<void> _checkBiometric() async {
+    final auth = LocalAuthentication();
+    try {
+      final canCheck = await auth.canCheckBiometrics || await auth.isDeviceSupported();
+      final enabled = await SecureStorage.isBiometricEnabled();
+      if (mounted) {
+        setState(() {
+          _biometricAvailable = canCheck;
+          _biometricEnabled = enabled;
+        });
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _toggleBiometric(bool value) async {
+    if (value) {
+      // Verify biometric first
+      final auth = LocalAuthentication();
+      try {
+        final didAuth = await auth.authenticate(
+          localizedReason: 'Authenticate to enable biometric login',
+          options: const AuthenticationOptions(biometricOnly: true),
+        );
+        if (!didAuth) return;
+      } catch (_) {
+        return;
+      }
+    }
+    await SecureStorage.setBiometricEnabled(value);
+    if (mounted) setState(() => _biometricEnabled = value);
+  }
 
   Future<void> _changePassword() async {
-    if (_newC.text.length < 8) return;
-    if (_newC.text != _confirmC.text) return;
+    if (_newC.text.length < 8) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Password must be at least 8 characters')));
+      return;
+    }
+    if (_newC.text != _confirmC.text) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Passwords do not match')));
+      return;
+    }
     setState(() => _loading = true);
     try {
       await ref.read(userApiProvider).changePassword(_currentC.text, _newC.text);
-      _currentC.clear(); _newC.clear(); _confirmC.clear();
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Password changed'), backgroundColor: AppColors.success));
+      _currentC.clear();
+      _newC.clear();
+      _confirmC.clear();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Password changed'), backgroundColor: AppColors.success),
+        );
+      }
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
-    } finally { setState(() => _loading = false); }
+    } finally {
+      setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _handle2FAToggle() async {
+    final user = ref.read(authProvider).user;
+    if (user == null) return;
+
+    if (user.twoFactorEnabled) {
+      // Disable: show disable sheet
+      await showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        builder: (_) => const TwoFaDisableSheet(),
+      );
+    } else {
+      // Enable: call setup, get QR data, show setup sheet
+      setState(() => _twoFaLoading = true);
+      try {
+        final data = await ref.read(authApiProvider).setup2FA();
+        final secret = data['secret'] as String;
+        final uri = data['uri'] as String? ?? data['qrCode'] as String? ?? '';
+
+        if (mounted) {
+          await showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            builder: (_) => TwoFaSetupSheet(secret: secret, qrCodeUri: uri),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to setup 2FA: $e')),
+          );
+        }
+      } finally {
+        if (mounted) setState(() => _twoFaLoading = false);
+      }
+    }
   }
 
   @override
@@ -152,6 +268,7 @@ class _SecurityTabState extends ConsumerState<_SecurityTab> {
     final sessionsAsync = ref.watch(sessionsProvider);
 
     return ListView(padding: const EdgeInsets.all(24), children: [
+      // ── Change Password ──
       Text('Change Password', style: Theme.of(context).textTheme.titleLarge),
       const SizedBox(height: 16),
       TextFormField(controller: _currentC, obscureText: true, decoration: const InputDecoration(labelText: 'Current Password')),
@@ -163,22 +280,50 @@ class _SecurityTabState extends ConsumerState<_SecurityTab> {
       ElevatedButton(onPressed: _loading ? null : _changePassword, child: const Text('Change Password')),
       const SizedBox(height: 32),
 
-      // 2FA
+      // ── Two-Factor Authentication ──
       Text('Two-Factor Authentication', style: Theme.of(context).textTheme.titleLarge),
       const SizedBox(height: 12),
-      Card(child: ListTile(
-        leading: Icon(Icons.security, color: user?.twoFactorEnabled == true ? AppColors.success : AppColors.textMuted),
-        title: Text(user?.twoFactorEnabled == true ? '2FA Enabled' : '2FA Disabled'),
-        subtitle: Text(user?.twoFactorEnabled == true ? 'Account is protected' : 'Recommended for security'),
-        trailing: Switch(
-          value: user?.twoFactorEnabled ?? false,
-          onChanged: (_) {/* TODO: 2FA setup flow */},
-          activeColor: AppColors.success,
+      Card(
+        child: ListTile(
+          leading: Icon(
+            Icons.security,
+            color: user?.twoFactorEnabled == true ? AppColors.success : AppColors.textMuted,
+          ),
+          title: Text(user?.twoFactorEnabled == true ? '2FA Enabled' : '2FA Disabled'),
+          subtitle: Text(
+            user?.twoFactorEnabled == true ? 'Account is protected with TOTP' : 'Recommended for security',
+          ),
+          trailing: _twoFaLoading
+              ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2))
+              : Switch(
+                  value: user?.twoFactorEnabled ?? false,
+                  onChanged: (_) => _handle2FAToggle(),
+                  activeColor: AppColors.success,
+                ),
         ),
-      )),
+      ),
       const SizedBox(height: 32),
 
-      // Sessions
+      // ── Biometric Login ──
+      if (_biometricAvailable) ...[
+        Text('Biometric Login', style: Theme.of(context).textTheme.titleLarge),
+        const SizedBox(height: 12),
+        Card(
+          child: ListTile(
+            leading: const Icon(Icons.fingerprint, color: AppColors.gold),
+            title: const Text('Face ID / Touch ID'),
+            subtitle: const Text('Quick login with biometrics'),
+            trailing: Switch(
+              value: _biometricEnabled,
+              onChanged: _toggleBiometric,
+              activeColor: AppColors.gold,
+            ),
+          ),
+        ),
+        const SizedBox(height: 32),
+      ],
+
+      // ── Active Sessions ──
       Text('Active Sessions', style: Theme.of(context).textTheme.titleLarge),
       const SizedBox(height: 12),
       sessionsAsync.when(
@@ -186,17 +331,27 @@ class _SecurityTabState extends ConsumerState<_SecurityTab> {
           children: sessions.map((s) => Card(
             margin: const EdgeInsets.only(bottom: 8),
             child: ListTile(
-              leading: const Icon(Icons.devices),
+              leading: Icon(
+                _sessionIcon(s['device'] ?? ''),
+                color: AppColors.textMuted,
+              ),
               title: Text(s['device'] ?? 'Unknown device'),
-              subtitle: Text(s['ip'] ?? ''),
+              subtitle: Text('${s['ip'] ?? ''} • ${s['lastActive'] ?? ''}'),
               trailing: s['current'] == true
-                  ? const Chip(label: Text('Current', style: TextStyle(fontSize: 10)))
+                  ? Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppColors.success.withAlpha(30),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Text('Current', style: TextStyle(fontSize: 10, color: AppColors.success)),
+                    )
                   : TextButton(
                       onPressed: () async {
                         await ref.read(userApiProvider).revokeSession(s['id']);
                         ref.invalidate(sessionsProvider);
                       },
-                      child: const Text('Revoke'),
+                      child: const Text('Revoke', style: TextStyle(color: AppColors.error)),
                     ),
             ),
           )).toList(),
@@ -206,7 +361,19 @@ class _SecurityTabState extends ConsumerState<_SecurityTab> {
       ),
     ]);
   }
+
+  IconData _sessionIcon(String device) {
+    final d = device.toLowerCase();
+    if (d.contains('iphone') || d.contains('ios') || d.contains('mobile')) return Icons.phone_iphone;
+    if (d.contains('android')) return Icons.phone_android;
+    if (d.contains('mac') || d.contains('windows') || d.contains('linux')) return Icons.computer;
+    return Icons.devices;
+  }
 }
+
+// ─────────────────────────────────────────────
+// Notifications Tab
+// ─────────────────────────────────────────────
 
 class _NotificationsTab extends StatelessWidget {
   @override
@@ -214,90 +381,231 @@ class _NotificationsTab extends StatelessWidget {
     return ListView(padding: const EdgeInsets.all(24), children: [
       Text('Notification Settings', style: Theme.of(context).textTheme.titleLarge),
       const SizedBox(height: 16),
-      _NotifRow('Income Accrual', 'Monthly accruals on your shares'),
-      _NotifRow('Payout', 'Withdrawal status updates'),
-      _NotifRow('P2P Trades', 'New orders and completed trades'),
-      _NotifRow('Platform News', 'Updates, promotions'),
-      _NotifRow('Security', 'Account logins, password changes'),
-      _NotifRow('Reports', 'Monthly object reports'),
+      _notifRow('Income Accrual', 'Monthly accruals on your shares'),
+      _notifRow('Payout', 'Withdrawal status updates'),
+      _notifRow('P2P Trades', 'New orders and completed trades'),
+      _notifRow('Platform News', 'Updates, promotions'),
+      _notifRow('Security', 'Account logins, password changes'),
+      _notifRow('Reports', 'Monthly object reports'),
     ]);
   }
 
-  Widget _NotifRow(String title, String subtitle) {
+  Widget _notifRow(String title, String subtitle) {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: SwitchListTile(
         title: Text(title),
         subtitle: Text(subtitle, style: const TextStyle(fontSize: 12)),
         value: true,
-        onChanged: (_) {/* TODO */},
+        onChanged: (_) {/* TODO: persist notification prefs */},
         activeColor: AppColors.gold,
       ),
     );
   }
 }
 
-class _VerificationTab extends ConsumerWidget {
+// ─────────────────────────────────────────────
+// Verification / KYC Tab — Stripe Identity
+// ─────────────────────────────────────────────
+
+class _VerificationTab extends ConsumerStatefulWidget {
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_VerificationTab> createState() => _VerificationTabState();
+}
+
+class _VerificationTabState extends ConsumerState<_VerificationTab> {
+  bool _loading = false;
+
+  Future<void> _startVerification() async {
+    setState(() => _loading = true);
+    try {
+      final api = ref.read(kycApiProvider);
+      final clientSecret = await api.createSession();
+
+      // On mobile, we open Stripe Identity hosted URL.
+      // The API returns a clientSecret — Stripe Identity is launched via
+      // the Stripe SDK or a hosted verification link.
+      // For iOS, we use the Stripe Identity SDK via flutter_stripe,
+      // but since flutter_stripe doesn't include Identity,
+      // we launch the hosted verification URL in a browser.
+      final verificationUrl = Uri.parse(
+        'https://verify.stripe.com/start/$clientSecret',
+      );
+      if (await canLaunchUrl(verificationUrl)) {
+        await launchUrl(verificationUrl, mode: LaunchMode.externalApplication);
+      }
+
+      // Refresh user data after returning from verification
+      if (mounted) {
+        // Give Stripe a moment to process
+        await Future.delayed(const Duration(seconds: 2));
+        try {
+          final user = await ref.read(authApiProvider).getMe();
+          ref.read(authProvider.notifier).updateUser(user);
+        } catch (_) {}
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to start verification: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final user = ref.watch(authProvider).user;
     final status = user?.kycStatus;
 
     return ListView(padding: const EdgeInsets.all(24), children: [
+      const SizedBox(height: 24),
       Center(
-        child: Icon(
-          _icon(status),
-          size: 64,
-          color: _color(status),
+        child: Container(
+          width: 96,
+          height: 96,
+          decoration: BoxDecoration(
+            color: _color(status).withAlpha(25),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(_icon(status), size: 48, color: _color(status)),
         ),
       ),
-      const SizedBox(height: 16),
-      Text(_title(status), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+      const SizedBox(height: 20),
+      Text(
+        _title(status),
+        style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+        textAlign: TextAlign.center,
+      ),
       const SizedBox(height: 8),
-      Text(_desc(status), style: const TextStyle(color: AppColors.textMuted), textAlign: TextAlign.center),
+      Text(
+        _desc(status),
+        style: const TextStyle(color: AppColors.textMuted, fontSize: 14),
+        textAlign: TextAlign.center,
+      ),
       const SizedBox(height: 32),
-      if (status != null && (status.name == 'none' || status.name == 'rejected'))
-        ElevatedButton(onPressed: () {/* TODO: Stripe Identity */}, child: const Text('Start Verification')),
+
+      // Verified — show confirmed documents
+      if (status == KycStatus.verified) ...[
+        _docRow(Icons.badge, 'Identity Document', 'Verified'),
+        _docRow(Icons.home, 'Proof of Address', 'Verified'),
+        _docRow(Icons.camera_alt, 'Selfie', 'Verified'),
+      ],
+
+      // Start / Retry verification
+      if (status == null || status == KycStatus.none || status == KycStatus.rejected)
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: _loading ? null : _startVerification,
+            icon: _loading
+                ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                : const Icon(Icons.verified_user),
+            label: Text(status == KycStatus.rejected ? 'Retry Verification' : 'Start Verification'),
+          ),
+        ),
+
+      // Pending — show info
+      if (status == KycStatus.pending) ...[
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                const Icon(Icons.access_time, color: AppColors.warning),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      Text('Review in progress', style: TextStyle(fontWeight: FontWeight.bold)),
+                      SizedBox(height: 4),
+                      Text(
+                        'Usually takes up to 24 hours. We will notify you when done.',
+                        style: TextStyle(fontSize: 12, color: AppColors.textMuted),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     ]);
   }
 
-  IconData _icon(dynamic s) {
-    final name = s?.name ?? 'none';
-    switch (name) {
-      case 'verified': return Icons.verified;
-      case 'pending': return Icons.hourglass_top;
-      case 'rejected': return Icons.cancel;
-      default: return Icons.shield;
+  Widget _docRow(IconData icon, String title, String status) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Card(
+        child: ListTile(
+          leading: Icon(icon, color: AppColors.success),
+          title: Text(title),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.check_circle, size: 16, color: AppColors.success),
+              const SizedBox(width: 4),
+              Text(status, style: const TextStyle(color: AppColors.success, fontSize: 12)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  IconData _icon(KycStatus? s) {
+    switch (s) {
+      case KycStatus.verified:
+        return Icons.verified;
+      case KycStatus.pending:
+        return Icons.hourglass_top;
+      case KycStatus.rejected:
+        return Icons.cancel;
+      default:
+        return Icons.shield;
     }
   }
 
-  Color _color(dynamic s) {
-    final name = s?.name ?? 'none';
-    switch (name) {
-      case 'verified': return AppColors.success;
-      case 'pending': return AppColors.warning;
-      case 'rejected': return AppColors.error;
-      default: return AppColors.textMuted;
+  Color _color(KycStatus? s) {
+    switch (s) {
+      case KycStatus.verified:
+        return AppColors.success;
+      case KycStatus.pending:
+        return AppColors.warning;
+      case KycStatus.rejected:
+        return AppColors.error;
+      default:
+        return AppColors.textMuted;
     }
   }
 
-  String _title(dynamic s) {
-    final name = s?.name ?? 'none';
-    switch (name) {
-      case 'verified': return 'Verification Complete';
-      case 'pending': return 'Under Review';
-      case 'rejected': return 'Verification Rejected';
-      default: return 'Not Verified';
+  String _title(KycStatus? s) {
+    switch (s) {
+      case KycStatus.verified:
+        return 'Verification Complete';
+      case KycStatus.pending:
+        return 'Under Review';
+      case KycStatus.rejected:
+        return 'Verification Rejected';
+      default:
+        return 'Not Verified';
     }
   }
 
-  String _desc(dynamic s) {
-    final name = s?.name ?? 'none';
-    switch (name) {
-      case 'verified': return 'Your identity is confirmed. All features available.';
-      case 'pending': return 'Documents are being reviewed (up to 24 hours).';
-      case 'rejected': return 'Verification failed. Please try again.';
-      default: return 'Complete KYC for full platform access.';
+  String _desc(KycStatus? s) {
+    switch (s) {
+      case KycStatus.verified:
+        return 'Your identity is confirmed. All features are available.';
+      case KycStatus.pending:
+        return 'Your documents are being reviewed.';
+      case KycStatus.rejected:
+        return 'Verification failed. Please try again with valid documents.';
+      default:
+        return 'Complete identity verification (KYC) to access all platform features including withdrawals.';
     }
   }
 }

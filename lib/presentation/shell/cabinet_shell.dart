@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/app_theme.dart';
 import '../../domain/providers/auth_provider.dart';
 import '../../domain/providers/data_providers.dart';
+import '../widgets/common/connectivity_banner.dart';
 
 class CabinetShell extends ConsumerWidget {
   final Widget child;
@@ -29,7 +30,7 @@ class CabinetShell extends ConsumerWidget {
     final user = authState.user;
 
     return Scaffold(
-      body: child,
+      body: ConnectivityBanner(child: child),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex(context),
         onTap: (index) => context.go(_tabs[index]),

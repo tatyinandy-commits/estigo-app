@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../domain/providers/api_providers.dart';
 
@@ -17,7 +18,12 @@ class _DepositSheetState extends ConsumerState<DepositSheet> {
 
   Future<void> _submit() async {
     final amount = double.tryParse(_amountController.text);
-    if (amount == null || amount <= 0) return;
+    if (amount == null || amount <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Enter a valid amount')),
+      );
+      return;
+    }
 
     setState(() => _loading = true);
 
@@ -28,17 +34,27 @@ class _DepositSheetState extends ConsumerState<DepositSheet> {
           purpose: 'deposit',
           amount: amount,
         );
-        // Open Stripe checkout URL
-        // url_launcher would be used here
-        if (mounted) Navigator.pop(context);
+        // Open Stripe checkout URL in browser
+        final url = Uri.parse(session.url);
+        if (await canLaunchUrl(url)) {
+          await launchUrl(url, mode: LaunchMode.externalApplication);
+        }
       } else {
         final api = ref.read(paymentApiProvider);
         final result = await api.createCryptoPayment(
           purpose: 'deposit',
           amount: amount,
         );
-        if (mounted) Navigator.pop(context);
+        // NOWPayments returns a payment URL
+        final paymentUrl = result['payment_url'] ?? result['paymentUrl'] ?? '';
+        if (paymentUrl.toString().isNotEmpty) {
+          final url = Uri.parse(paymentUrl.toString());
+          if (await canLaunchUrl(url)) {
+            await launchUrl(url, mode: LaunchMode.externalApplication);
+          }
+        }
       }
+      if (mounted) Navigator.pop(context);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -46,8 +62,14 @@ class _DepositSheetState extends ConsumerState<DepositSheet> {
         );
       }
     } finally {
-      setState(() => _loading = false);
+      if (mounted) setState(() => _loading = false);
     }
+  }
+
+  @override
+  void dispose() {
+    _amountController.dispose();
+    super.dispose();
   }
 
   @override
@@ -68,18 +90,17 @@ class _DepositSheetState extends ConsumerState<DepositSheet> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey.shade400,
+                color: AppColors.textMuted.withAlpha(80),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
           ),
           const SizedBox(height: 16),
-          Text('Top Up Balance',
-              style: Theme.of(context).textTheme.titleLarge),
+          Text('Top Up Balance', style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 24),
           TextFormField(
             controller: _amountController,
-            keyboardType: TextInputType.number,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
             decoration: const InputDecoration(
               labelText: 'Amount (EUR)',
               prefixIcon: Icon(Icons.euro),
@@ -107,8 +128,11 @@ class _DepositSheetState extends ConsumerState<DepositSheet> {
           ElevatedButton(
             onPressed: _loading ? null : _submit,
             child: _loading
-                ? const SizedBox(width: 20, height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                  )
                 : const Text('Top Up'),
           ),
         ],
@@ -142,13 +166,13 @@ class _MethodTile extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: selected ? AppColors.gold : Colors.grey.shade300,
+            color: selected ? AppColors.gold : AppColors.textMuted.withAlpha(60),
             width: selected ? 2 : 1,
           ),
         ),
         child: Row(
           children: [
-            Icon(icon, color: selected ? AppColors.gold : Colors.grey),
+            Icon(icon, color: selected ? AppColors.gold : AppColors.textMuted),
             const SizedBox(width: 12),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -158,8 +182,7 @@ class _MethodTile extends StatelessWidget {
               ],
             ),
             const Spacer(),
-            if (selected)
-              const Icon(Icons.check_circle, color: AppColors.gold),
+            if (selected) const Icon(Icons.check_circle, color: AppColors.gold),
           ],
         ),
       ),

@@ -21,11 +21,23 @@ Future<void> main() async {
   );
 }
 
-class EstigoApp extends ConsumerWidget {
+class EstigoApp extends ConsumerStatefulWidget {
   const EstigoApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<EstigoApp> createState() => _EstigoAppState();
+}
+
+class _EstigoAppState extends ConsumerState<EstigoApp> {
+  @override
+  void initState() {
+    super.initState();
+    // Push notifications will be initialized after login
+    // via PushNotificationService.initialize() in AuthNotifier
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final router = ref.watch(routerProvider);
     final locale = ref.watch(localeProvider);
     final themeMode = ref.watch(themeModeProvider);

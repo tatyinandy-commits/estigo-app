@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:local_auth/local_auth.dart';
 import '../../../core/storage/secure_storage.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../domain/providers/auth_provider.dart';
@@ -26,14 +27,40 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
     final auth = ref.read(authProvider);
     if (auth.isAuthenticated) {
-      context.go('/cabinet');
+      // Check biometric lock
+      final biometricEnabled = await SecureStorage.isBiometricEnabled();
+      if (biometricEnabled) {
+        final didAuth = await _authenticateBiometric();
+        if (!didAuth) {
+          // User failed biometric — send to login
+          if (mounted) context.go('/login');
+          return;
+        }
+      }
+      if (mounted) context.go('/cabinet');
     } else {
       final seen = await SecureStorage.isOnboardingSeen();
-      if (seen) {
-        context.go('/login');
-      } else {
-        context.go('/onboarding');
+      if (mounted) {
+        context.go(seen ? '/login' : '/onboarding');
       }
+    }
+  }
+
+  Future<bool> _authenticateBiometric() async {
+    final auth = LocalAuthentication();
+    try {
+      final canCheck = await auth.canCheckBiometrics || await auth.isDeviceSupported();
+      if (!canCheck) return true; // skip if not available
+
+      return await auth.authenticate(
+        localizedReason: 'Authenticate to access Estigo',
+        options: const AuthenticationOptions(
+          biometricOnly: true,
+          stickyAuth: true,
+        ),
+      );
+    } catch (_) {
+      return true; // on error, allow through
     }
   }
 
