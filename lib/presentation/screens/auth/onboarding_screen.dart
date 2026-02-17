@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import '../../../core/storage/secure_storage.dart';
@@ -126,7 +127,7 @@ class _OnboardingPage extends StatelessWidget {
               shape: BoxShape.circle,
             ),
             child: Icon(icon, size: 56, color: AppColors.gold),
-          ),
+          ).animate().fadeIn(duration: 500.ms).scale(begin: const Offset(0.9, 0.9), end: const Offset(1, 1), duration: 500.ms, curve: Curves.easeOut),
           const SizedBox(height: 40),
           Text(
             title,
@@ -136,7 +137,7 @@ class _OnboardingPage extends StatelessWidget {
               color: Colors.white,
             ),
             textAlign: TextAlign.center,
-          ),
+          ).animate().fadeIn(duration: 400.ms, delay: 150.ms).slideY(begin: 0.05, end: 0, duration: 400.ms, delay: 150.ms),
           const SizedBox(height: 16),
           Text(
             subtitle,
@@ -146,7 +147,7 @@ class _OnboardingPage extends StatelessWidget {
               height: 1.5,
             ),
             textAlign: TextAlign.center,
-          ),
+          ).animate().fadeIn(duration: 400.ms, delay: 250.ms).slideY(begin: 0.05, end: 0, duration: 400.ms, delay: 250.ms),
         ],
       ),
     );

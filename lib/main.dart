@@ -9,13 +9,14 @@ import 'core/l10n/l10n.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await SentryFlutter.init((options) {
-    options.dsn = Env.sentryDsn;
-    options.environment = Env.isProduction ? 'production' : 'development';
-    options.tracesSampleRate = 0.2;
-  });
-
-  runApp(const ProviderScope(child: EstigoApp()));
+  await SentryFlutter.init(
+    (options) {
+      options.dsn = Env.sentryDsn;
+      options.environment = Env.isProduction ? 'production' : 'development';
+      options.tracesSampleRate = 0.2;
+    },
+    appRunner: () => runApp(const ProviderScope(child: EstigoApp())),
+  );
 }
 
 class EstigoApp extends ConsumerWidget {

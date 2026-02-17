@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../../../core/theme/app_theme.dart';
 
 /// Reusable error display widget with retry button.
@@ -23,7 +24,7 @@ class ErrorView extends StatelessWidget {
             const Icon(Icons.error_outline, size: 48, color: AppColors.error),
             const SizedBox(height: 16),
             Text(
-              'Something went wrong',
+              S.of(context)?.somethingWentWrong ?? 'Something went wrong',
               style: Theme.of(context).textTheme.titleMedium,
               textAlign: TextAlign.center,
             ),
@@ -40,7 +41,7 @@ class ErrorView extends StatelessWidget {
               OutlinedButton.icon(
                 onPressed: onRetry,
                 icon: const Icon(Icons.refresh),
-                label: const Text('Retry'),
+                label: Text(S.of(context)?.retry ?? 'Retry'),
               ),
             ],
           ],

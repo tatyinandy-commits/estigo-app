@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
@@ -51,6 +52,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
+    final l = S.of(context);
 
     return Scaffold(
       backgroundColor: AppColors.dark,
@@ -69,9 +71,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Text(
-                  'Create Account',
-                  style: TextStyle(
+                Text(
+                  l?.createAccount ?? 'Create Account',
+                  style: const TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
@@ -79,7 +81,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Start investing in hotel rooms',
+                  l?.startInvesting ?? 'Start investing in hotel rooms',
                   style: TextStyle(
                     fontSize: 14,
                     color: Colors.white.withOpacity(0.6),
@@ -103,14 +105,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 TextFormField(
                   controller: _nameController,
                   style: const TextStyle(color: Colors.white),
-                  decoration: const InputDecoration(
-                    labelText: 'Full Name',
-                    labelStyle: TextStyle(color: Colors.white54),
+                  decoration: InputDecoration(
+                    labelText: l?.fullName ?? 'Full Name',
+                    labelStyle: const TextStyle(color: Colors.white54),
                     prefixIcon:
-                        Icon(Icons.person_outline, color: Colors.white38),
+                        const Icon(Icons.person_outline, color: Colors.white38),
                   ),
                   validator: (v) =>
-                      v == null || v.isEmpty ? 'Enter your name' : null,
+                      v == null || v.isEmpty ? (l?.enterName ?? 'Enter your name') : null,
                 ),
                 const SizedBox(height: 16),
 
@@ -118,15 +120,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
                   style: const TextStyle(color: Colors.white),
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    labelStyle: TextStyle(color: Colors.white54),
+                  decoration: InputDecoration(
+                    labelText: l?.email ?? 'Email',
+                    labelStyle: const TextStyle(color: Colors.white54),
                     prefixIcon:
-                        Icon(Icons.email_outlined, color: Colors.white38),
+                        const Icon(Icons.email_outlined, color: Colors.white38),
                   ),
                   validator: (v) {
-                    if (v == null || v.isEmpty) return 'Enter email';
-                    if (!v.contains('@')) return 'Invalid email';
+                    if (v == null || v.isEmpty) return l?.enterEmail ?? 'Enter email';
+                    if (!v.contains('@')) return l?.invalidEmail ?? 'Invalid email';
                     return null;
                   },
                 ),
@@ -137,7 +139,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   obscureText: _obscurePassword,
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
-                    labelText: 'Password',
+                    labelText: l?.password ?? 'Password',
                     labelStyle: const TextStyle(color: Colors.white54),
                     prefixIcon:
                         const Icon(Icons.lock_outline, color: Colors.white38),
@@ -153,8 +155,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     ),
                   ),
                   validator: (v) {
-                    if (v == null || v.isEmpty) return 'Enter password';
-                    if (v.length < 8) return 'Minimum 8 characters';
+                    if (v == null || v.isEmpty) return l?.enterPassword ?? 'Enter password';
+                    if (v.length < 8) return l?.minChars ?? 'Minimum 8 characters';
                     return null;
                   },
                 ),
@@ -163,10 +165,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 TextFormField(
                   controller: _referralController,
                   style: const TextStyle(color: Colors.white),
-                  decoration: const InputDecoration(
-                    labelText: 'Referral Code (optional)',
-                    labelStyle: TextStyle(color: Colors.white54),
-                    prefixIcon: Icon(Icons.card_giftcard, color: Colors.white38),
+                  decoration: InputDecoration(
+                    labelText: l?.referralCodeOptional ?? 'Referral Code (optional)',
+                    labelStyle: const TextStyle(color: Colors.white54),
+                    prefixIcon: const Icon(Icons.card_giftcard, color: Colors.white38),
                   ),
                 ),
                 const SizedBox(height: 32),
@@ -180,19 +182,19 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           child: CircularProgressIndicator(
                               strokeWidth: 2, color: Colors.white),
                         )
-                      : const Text('Create Account'),
+                      : Text(l?.createAccount ?? 'Create Account'),
                 ),
                 const SizedBox(height: 16),
 
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text('Already have an account?',
-                        style: TextStyle(color: Colors.white54)),
+                    Text(l?.alreadyHaveAccount ?? 'Already have an account?',
+                        style: const TextStyle(color: Colors.white54)),
                     TextButton(
                       onPressed: () => context.go('/login'),
-                      child: const Text('Sign In',
-                          style: TextStyle(color: AppColors.gold)),
+                      child: Text(l?.signIn ?? 'Sign In',
+                          style: const TextStyle(color: AppColors.gold)),
                     ),
                   ],
                 ),

@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../domain/providers/data_providers.dart';
+import '../../widgets/common/error_view.dart';
 import '../../widgets/sheets/buy_shares_sheet.dart';
 
 class ObjectScreen extends ConsumerWidget {
@@ -10,12 +13,13 @@ class ObjectScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = S.of(context);
     final objectAsync = ref.watch(objectProvider);
     final roomsAsync = ref.watch(roomsProvider);
     final revenueAsync = ref.watch(revenueBreakdownProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Object')),
+      appBar: AppBar(title: Text(l?.object ?? 'Object')),
       body: RefreshIndicator(
         onRefresh: () async {
           ref.invalidate(objectProvider);
@@ -23,7 +27,10 @@ class ObjectScreen extends ConsumerWidget {
         },
         child: objectAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Center(child: Text('Error: $e')),
+          error: (e, _) => ErrorView(
+            message: e.toString(),
+            onRetry: () => ref.invalidate(objectProvider),
+          ),
           data: (obj) => ListView(
             padding: const EdgeInsets.all(16),
             children: [
@@ -41,7 +48,7 @@ class ObjectScreen extends ConsumerWidget {
                     child: const Icon(Icons.apartment, size: 64, color: AppColors.gold),
                   ),
                 ),
-              ),
+              ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.03, end: 0, duration: 400.ms),
               const SizedBox(height: 16),
 
               // Name & location
@@ -62,18 +69,18 @@ class ObjectScreen extends ConsumerWidget {
                     child: const Text('Active', style: TextStyle(color: AppColors.success, fontSize: 12)),
                   ),
                 ],
-              ),
+              ).animate().fadeIn(duration: 350.ms, delay: 100.ms),
               const SizedBox(height: 24),
 
               // Stats row
               Row(
                 children: [
-                  _Stat('Rooms', '${obj.totalRooms}'),
-                  _Stat('Occupancy', '${(obj.occupancyRate * 100).toStringAsFixed(0)}%'),
-                  _Stat('Margin', '${(obj.profitMargin * 100).toStringAsFixed(0)}%'),
-                  _Stat('Share', '${obj.sharePrice.toStringAsFixed(0)} EUR'),
+                  _Stat(l?.totalRooms ?? 'Rooms', '${obj.totalRooms}'),
+                  _Stat(l?.occupancy ?? 'Occupancy', '${(obj.occupancyRate * 100).toStringAsFixed(0)}%'),
+                  _Stat(l?.profitMargin ?? 'Margin', '${(obj.profitMargin * 100).toStringAsFixed(0)}%'),
+                  _Stat(l?.sharePrice ?? 'Share', '${obj.sharePrice.toStringAsFixed(0)} EUR'),
                 ],
-              ),
+              ).animate().fadeIn(duration: 400.ms, delay: 150.ms).slideY(begin: 0.02, end: 0, duration: 400.ms, delay: 150.ms),
               const SizedBox(height: 24),
 
               // Revenue breakdown pie chart
@@ -83,7 +90,7 @@ class ObjectScreen extends ConsumerWidget {
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Revenue Structure', style: Theme.of(context).textTheme.titleLarge),
+                      Text(l?.revenueStructure ?? 'Revenue Structure', style: Theme.of(context).textTheme.titleLarge),
                       const SizedBox(height: 12),
                       SizedBox(
                         height: 200,
@@ -117,12 +124,15 @@ class ObjectScreen extends ConsumerWidget {
                   );
                 },
                 loading: () => const SizedBox.shrink(),
-                error: (_, __) => const SizedBox.shrink(),
+                error: (e, _) => ErrorView(
+                  message: e.toString(),
+                  onRetry: () => ref.invalidate(revenueBreakdownProvider),
+                ),
               ),
               const SizedBox(height: 24),
 
               // Rooms list
-              Text('Rooms', style: Theme.of(context).textTheme.titleLarge),
+              Text(l?.rooms ?? 'Rooms', style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 12),
               roomsAsync.when(
                 data: (rooms) => Column(
@@ -141,7 +151,7 @@ class ObjectScreen extends ConsumerWidget {
                               children: [
                                 Text('Room ${room.number}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                                 const Spacer(),
-                                Text('Floor ${room.floor}', style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                                Text(l?.floor(room.floor) ?? 'Floor ${room.floor}', style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
                               ],
                             ),
                             const SizedBox(height: 8),
@@ -149,7 +159,7 @@ class ObjectScreen extends ConsumerWidget {
                               children: [
                                 _RoomInfo('Yield', '${(room.occupancyRate * 100).toStringAsFixed(0)}%'),
                                 _RoomInfo('Price', '${room.sharePrice.toStringAsFixed(0)} EUR'),
-                                _RoomInfo('Available', '${room.availableShares}'),
+                                _RoomInfo(l?.available ?? 'Available', '${room.availableShares}'),
                               ],
                             ),
                             const SizedBox(height: 8),
@@ -159,7 +169,7 @@ class ObjectScreen extends ConsumerWidget {
                               valueColor: const AlwaysStoppedAnimation(AppColors.gold),
                             ),
                             const SizedBox(height: 4),
-                            Text('${room.soldShares}/${room.totalShares} sold', style: const TextStyle(fontSize: 11, color: AppColors.textMuted)),
+                            Text('${room.soldShares}/${room.totalShares} ${l?.sold ?? 'sold'}', style: const TextStyle(fontSize: 11, color: AppColors.textMuted)),
                             const SizedBox(height: 12),
                             SizedBox(
                               width: double.infinity,
@@ -170,11 +180,11 @@ class ObjectScreen extends ConsumerWidget {
                                         isScrollControlled: true,
                                         builder: (_) => BuySharesSheet(room: room),
                                       ),
-                                      child: const Text('Buy Shares'),
+                                      child: Text(l?.buyShares ?? 'Buy Shares'),
                                     )
                                   : OutlinedButton(
                                       onPressed: null,
-                                      child: const Text('Sold Out'),
+                                      child: Text(l?.soldOut ?? 'Sold Out'),
                                     ),
                             ),
                           ],
@@ -184,7 +194,10 @@ class ObjectScreen extends ConsumerWidget {
                   }).toList(),
                 ),
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (e, _) => Text('Error: $e'),
+                error: (e, _) => ErrorView(
+                  message: e.toString(),
+                  onRetry: () => ref.invalidate(roomsProvider),
+                ),
               ),
             ],
           ),

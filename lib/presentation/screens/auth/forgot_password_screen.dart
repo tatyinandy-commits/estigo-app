@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
@@ -39,7 +40,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
       });
     } catch (e) {
       setState(() {
-        _error = 'Failed to send reset email';
+        _error = S.of(context)?.failedToSendEmail ?? 'Failed to send reset email';
         _loading = false;
       });
     }
@@ -64,14 +65,15 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   }
 
   Widget _buildForm() {
+    final l = S.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Text('Forgot Password',
-            style: TextStyle(
+        Text(l?.forgotPassword ?? 'Forgot Password',
+            style: const TextStyle(
                 fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white)),
         const SizedBox(height: 8),
-        Text('Enter your email to receive a reset link',
+        Text(l?.enterEmailForReset ?? 'Enter your email to receive a reset link',
             style: TextStyle(color: Colors.white.withOpacity(0.6))),
         const SizedBox(height: 32),
         if (_error != null) ...[
@@ -89,10 +91,10 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           controller: _emailController,
           keyboardType: TextInputType.emailAddress,
           style: const TextStyle(color: Colors.white),
-          decoration: const InputDecoration(
-            labelText: 'Email',
-            labelStyle: TextStyle(color: Colors.white54),
-            prefixIcon: Icon(Icons.email_outlined, color: Colors.white38),
+          decoration: InputDecoration(
+            labelText: l?.email ?? 'Email',
+            labelStyle: const TextStyle(color: Colors.white54),
+            prefixIcon: const Icon(Icons.email_outlined, color: Colors.white38),
           ),
         ),
         const SizedBox(height: 24),
@@ -102,29 +104,30 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
               ? const SizedBox(
                   width: 20, height: 20,
                   child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-              : const Text('Send Reset Link'),
+              : Text(l?.sendResetLink ?? 'Send Reset Link'),
         ),
       ],
     );
   }
 
   Widget _buildSuccess() {
+    final l = S.of(context);
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         const Icon(Icons.mark_email_read, size: 64, color: AppColors.success),
         const SizedBox(height: 24),
-        const Text('Email Sent!',
-            style: TextStyle(
+        Text(l?.emailSent ?? 'Email Sent!',
+            style: const TextStyle(
                 fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
         const SizedBox(height: 12),
-        Text('Check your inbox for the password reset link.',
+        Text(l?.checkInbox ?? 'Check your inbox for the password reset link.',
             style: TextStyle(color: Colors.white.withOpacity(0.6)),
             textAlign: TextAlign.center),
         const SizedBox(height: 32),
         ElevatedButton(
           onPressed: () => context.go('/login'),
-          child: const Text('Back to Login'),
+          child: Text(l?.backToLogin ?? 'Back to Login'),
         ),
       ],
     );

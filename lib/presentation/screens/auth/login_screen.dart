@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -130,8 +131,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     prefixIcon: const Icon(Icons.email_outlined, color: Colors.white38),
                   ),
                   validator: (v) {
-                    if (v == null || v.isEmpty) return 'Enter email';
-                    if (!v.contains('@')) return 'Invalid email';
+                    if (v == null || v.isEmpty) return l?.enterEmail ?? 'Enter email';
+                    if (!v.contains('@')) return l?.invalidEmail ?? 'Invalid email';
                     return null;
                   },
                 ),
@@ -159,7 +160,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                   ),
                   validator: (v) {
-                    if (v == null || v.isEmpty) return 'Enter password';
+                    if (v == null || v.isEmpty) return l?.enterPassword ?? 'Enter password';
                     return null;
                   },
                 ),
@@ -206,7 +207,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ],
                 ),
               ],
-            ),
+            ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.04, end: 0, duration: 400.ms),
           ),
         ),
       ),

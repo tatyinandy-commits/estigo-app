@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -37,17 +38,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with SingleTick
 
   @override
   Widget build(BuildContext context) {
+    final l = S.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Settings'),
+        title: Text(l?.settings ?? 'Settings'),
         bottom: TabBar(
           controller: _tab,
           isScrollable: true,
-          tabs: const [
-            Tab(text: 'Profile'),
-            Tab(text: 'Security'),
-            Tab(text: 'Notifications'),
-            Tab(text: 'Verification'),
+          tabs: [
+            Tab(text: l?.profile ?? 'Profile'),
+            Tab(text: l?.security ?? 'Security'),
+            Tab(text: l?.notifications ?? 'Notifications'),
+            Tab(text: l?.verification ?? 'Verification'),
           ],
         ),
       ),
@@ -101,6 +103,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
 
   @override
   Widget build(BuildContext context) {
+    final l = S.of(context);
     final user = ref.watch(authProvider).user;
     return ListView(padding: const EdgeInsets.all(24), children: [
       TextFormField(controller: _nameC, decoration: const InputDecoration(labelText: 'Full Name')),
@@ -136,7 +139,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
         onPressed: _loading ? null : _save,
         child: _loading
             ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-            : const Text('Save Changes'),
+            : Text(l?.save ?? 'Save Changes'),
       ),
     ]);
   }
@@ -265,12 +268,13 @@ class _SecurityTabState extends ConsumerState<_SecurityTab> {
 
   @override
   Widget build(BuildContext context) {
+    final l = S.of(context);
     final user = ref.watch(authProvider).user;
     final sessionsAsync = ref.watch(sessionsProvider);
 
     return ListView(padding: const EdgeInsets.all(24), children: [
       // ── Change Password ──
-      Text('Change Password', style: Theme.of(context).textTheme.titleLarge),
+      Text(l?.changePassword ?? 'Change Password', style: Theme.of(context).textTheme.titleLarge),
       const SizedBox(height: 16),
       TextFormField(controller: _currentC, obscureText: true, decoration: const InputDecoration(labelText: 'Current Password')),
       const SizedBox(height: 12),
@@ -278,11 +282,11 @@ class _SecurityTabState extends ConsumerState<_SecurityTab> {
       const SizedBox(height: 12),
       TextFormField(controller: _confirmC, obscureText: true, decoration: const InputDecoration(labelText: 'Confirm Password')),
       const SizedBox(height: 16),
-      ElevatedButton(onPressed: _loading ? null : _changePassword, child: const Text('Change Password')),
+      ElevatedButton(onPressed: _loading ? null : _changePassword, child: Text(l?.changePassword ?? 'Change Password')),
       const SizedBox(height: 32),
 
       // ── Two-Factor Authentication ──
-      Text('Two-Factor Authentication', style: Theme.of(context).textTheme.titleLarge),
+      Text(l?.twoFactorAuth ?? 'Two-Factor Authentication', style: Theme.of(context).textTheme.titleLarge),
       const SizedBox(height: 12),
       Card(
         child: ListTile(
@@ -325,7 +329,7 @@ class _SecurityTabState extends ConsumerState<_SecurityTab> {
       ],
 
       // ── Active Sessions ──
-      Text('Active Sessions', style: Theme.of(context).textTheme.titleLarge),
+      Text(l?.activeSessions ?? 'Active Sessions', style: Theme.of(context).textTheme.titleLarge),
       const SizedBox(height: 12),
       sessionsAsync.when(
         data: (sessions) => Column(
@@ -422,17 +426,18 @@ class _NotificationsTabState extends State<_NotificationsTab> {
 
   @override
   Widget build(BuildContext context) {
+    final l = S.of(context);
     if (!_loaded) {
       return const Center(child: CircularProgressIndicator());
     }
     return ListView(padding: const EdgeInsets.all(24), children: [
-      Text('Notification Settings', style: Theme.of(context).textTheme.titleLarge),
+      Text(l?.notifications ?? 'Notification Settings', style: Theme.of(context).textTheme.titleLarge),
       const SizedBox(height: 16),
       _notifRow('notif_income', 'Income Accrual', 'Monthly accruals on your shares'),
       _notifRow('notif_payout', 'Payout', 'Withdrawal status updates'),
       _notifRow('notif_p2p', 'P2P Trades', 'New orders and completed trades'),
       _notifRow('notif_news', 'Platform News', 'Updates, promotions'),
-      _notifRow('notif_security', 'Security', 'Account logins, password changes'),
+      _notifRow('notif_security', l?.security ?? 'Security', 'Account logins, password changes'),
       _notifRow('notif_reports', 'Reports', 'Monthly object reports'),
     ]);
   }
@@ -504,6 +509,7 @@ class _VerificationTabState extends ConsumerState<_VerificationTab> {
 
   @override
   Widget build(BuildContext context) {
+    final l = S.of(context);
     final user = ref.watch(authProvider).user;
     final status = user?.kycStatus;
 
@@ -550,7 +556,7 @@ class _VerificationTabState extends ConsumerState<_VerificationTab> {
             icon: _loading
                 ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
                 : const Icon(Icons.verified_user),
-            label: Text(status == KycStatus.rejected ? 'Retry Verification' : 'Start Verification'),
+            label: Text(status == KycStatus.rejected ? 'Retry Verification' : (l?.startVerification ?? 'Start Verification')),
           ),
         ),
 

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../domain/providers/data_providers.dart';
+import '../../widgets/common/error_view.dart';
 import '../../widgets/common/stat_card.dart';
 
 class PortfolioScreen extends ConsumerWidget {
@@ -10,26 +12,30 @@ class PortfolioScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = S.of(context);
     final portfolioAsync = ref.watch(portfolioProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('My Portfolio')),
+      appBar: AppBar(title: Text(l?.myPortfolio ?? 'My Portfolio')),
       body: RefreshIndicator(
         onRefresh: () async => ref.invalidate(portfolioProvider),
         child: portfolioAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Center(child: Text('Error: $e')),
+          error: (e, _) => ErrorView(
+            message: e.toString(),
+            onRetry: () => ref.invalidate(portfolioProvider),
+          ),
           data: (shares) {
             if (shares.isEmpty) {
-              return const Center(
+              return Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.pie_chart_outline, size: 64, color: AppColors.textMuted),
-                    SizedBox(height: 16),
-                    Text('Portfolio is empty', style: TextStyle(fontSize: 18, color: AppColors.textMuted)),
-                    SizedBox(height: 8),
-                    Text('Buy your first shares to start investing'),
+                    const Icon(Icons.pie_chart_outline, size: 64, color: AppColors.textMuted),
+                    const SizedBox(height: 16),
+                    Text(l?.noData ?? 'Portfolio is empty', style: const TextStyle(fontSize: 18, color: AppColors.textMuted)),
+                    const SizedBox(height: 8),
+                    Text(l?.buyShares ?? 'Buy your first shares to start investing'),
                   ],
                 ),
               );
@@ -44,20 +50,20 @@ class PortfolioScreen extends ConsumerWidget {
               padding: const EdgeInsets.all(16),
               children: [
                 Row(children: [
-                  Expanded(child: StatCard(title: 'Invested', value: '${totalInvested.toStringAsFixed(0)} EUR', icon: Icons.arrow_upward, color: AppColors.info)),
+                  Expanded(child: StatCard(title: l?.invested ?? 'Invested', value: '${totalInvested.toStringAsFixed(0)} EUR', icon: Icons.arrow_upward, color: AppColors.info)),
                   const SizedBox(width: 12),
-                  Expanded(child: StatCard(title: 'Value', value: '${totalValue.toStringAsFixed(0)} EUR', icon: Icons.trending_up, color: AppColors.success)),
+                  Expanded(child: StatCard(title: l?.currentValue ?? 'Value', value: '${totalValue.toStringAsFixed(0)} EUR', icon: Icons.trending_up, color: AppColors.success)),
                 ]),
                 const SizedBox(height: 12),
                 Row(children: [
-                  Expanded(child: StatCard(title: 'Income', value: '${totalIncome.toStringAsFixed(0)} EUR', icon: Icons.monetization_on, color: AppColors.gold)),
+                  Expanded(child: StatCard(title: l?.totalIncome ?? 'Income', value: '${totalIncome.toStringAsFixed(0)} EUR', icon: Icons.monetization_on, color: AppColors.gold)),
                   const SizedBox(width: 12),
-                  Expanded(child: StatCard(title: 'Gain', value: '${gain >= 0 ? "+" : ""}${gain.toStringAsFixed(0)} EUR', icon: Icons.show_chart, color: gain >= 0 ? AppColors.success : AppColors.error)),
+                  Expanded(child: StatCard(title: l?.unrealizedGain ?? 'Gain', value: '${gain >= 0 ? "+" : ""}${gain.toStringAsFixed(0)} EUR', icon: Icons.show_chart, color: gain >= 0 ? AppColors.success : AppColors.error)),
                 ]),
                 const SizedBox(height: 24),
 
                 // Pie chart
-                Text('Allocation', style: Theme.of(context).textTheme.titleLarge),
+                Text(l?.allocation ?? 'Allocation', style: Theme.of(context).textTheme.titleLarge),
                 const SizedBox(height: 12),
                 SizedBox(
                   height: 200,
@@ -80,7 +86,7 @@ class PortfolioScreen extends ConsumerWidget {
                 const SizedBox(height: 24),
 
                 // Positions
-                Text('Positions', style: Theme.of(context).textTheme.titleLarge),
+                Text(l?.positions ?? 'Positions', style: Theme.of(context).textTheme.titleLarge),
                 const SizedBox(height: 12),
                 ...shares.map((s) {
                   final profit = s.currentValue - s.purchasePrice;

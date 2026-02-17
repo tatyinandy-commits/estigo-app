@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../domain/providers/data_providers.dart';
 import '../../../domain/providers/api_providers.dart';
 import '../../../data/models/models.dart';
+import '../../widgets/common/error_view.dart';
 
 class P2PScreen extends ConsumerStatefulWidget {
   const P2PScreen({super.key});
@@ -37,19 +39,20 @@ class _P2PScreenState extends ConsumerState<P2PScreen> with SingleTickerProvider
 
   @override
   Widget build(BuildContext context) {
+    final l = S.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('P2P Market'),
+        title: Text(l?.p2pMarket ?? 'P2P Market'),
         actions: [
           TextButton.icon(
             onPressed: _showCreateOrder,
             icon: const Icon(Icons.add),
-            label: const Text('Create'),
+            label: Text(l?.createOrder ?? 'Create'),
           ),
         ],
         bottom: TabBar(
           controller: _tabController,
-          tabs: const [Tab(text: 'All Orders'), Tab(text: 'My Orders')],
+          tabs: [Tab(text: l?.allOrders ?? 'All Orders'), Tab(text: l?.myOrders ?? 'My Orders')],
         ),
       ),
       body: TabBarView(
@@ -66,17 +69,21 @@ class _P2PScreenState extends ConsumerState<P2PScreen> with SingleTickerProvider
 class _AllOrdersTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = S.of(context);
     final ordersAsync = ref.watch(p2pOrdersProvider);
 
     return RefreshIndicator(
       onRefresh: () async => ref.invalidate(p2pOrdersProvider),
       child: ordersAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => ErrorView(
+          message: e.toString(),
+          onRetry: () => ref.invalidate(p2pOrdersProvider),
+        ),
         data: (orders) {
           final active = orders.where((o) => o.status == OrderStatus.active).toList();
           if (active.isEmpty) {
-            return const Center(child: Text('No active orders', style: TextStyle(color: AppColors.textMuted)));
+            return Center(child: Text(l?.noData ?? 'No active orders', style: const TextStyle(color: AppColors.textMuted)));
           }
           return ListView.builder(
             padding: const EdgeInsets.all(16),
@@ -92,16 +99,20 @@ class _AllOrdersTab extends ConsumerWidget {
 class _MyOrdersTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = S.of(context);
     final ordersAsync = ref.watch(p2pMyOrdersProvider);
 
     return RefreshIndicator(
       onRefresh: () async => ref.invalidate(p2pMyOrdersProvider),
       child: ordersAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => ErrorView(
+          message: e.toString(),
+          onRetry: () => ref.invalidate(p2pMyOrdersProvider),
+        ),
         data: (orders) {
           if (orders.isEmpty) {
-            return const Center(child: Text('No orders', style: TextStyle(color: AppColors.textMuted)));
+            return Center(child: Text(l?.noData ?? 'No orders', style: const TextStyle(color: AppColors.textMuted)));
           }
           return ListView.builder(
             padding: const EdgeInsets.all(16),
@@ -123,6 +134,7 @@ class _OrderCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = S.of(context);
     final isBuy = order.type == OrderType.buy;
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -138,7 +150,7 @@ class _OrderCard extends ConsumerWidget {
                   color: (isBuy ? AppColors.success : AppColors.error).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(6),
                 ),
-                child: Text(isBuy ? 'BUY' : 'SELL', style: TextStyle(color: isBuy ? AppColors.success : AppColors.error, fontWeight: FontWeight.bold, fontSize: 12)),
+                child: Text(isBuy ? (l?.buy ?? 'BUY').toUpperCase() : (l?.sell ?? 'SELL').toUpperCase(), style: TextStyle(color: isBuy ? AppColors.success : AppColors.error, fontWeight: FontWeight.bold, fontSize: 12)),
               ),
               const SizedBox(width: 8),
               Text('Room ${order.roomNumber}', style: const TextStyle(fontWeight: FontWeight.bold)),
@@ -149,7 +161,7 @@ class _OrderCard extends ConsumerWidget {
             Row(children: [
               _Info('Shares', '${order.shares}'),
               _Info('Price/share', '${order.pricePerShare.toStringAsFixed(0)}'),
-              _Info('Total', '${order.totalPrice.toStringAsFixed(0)} EUR'),
+              _Info(l?.amount ?? 'Total', '${order.totalPrice.toStringAsFixed(0)} EUR'),
             ]),
             if (showAction && order.status == OrderStatus.active) ...[
               const SizedBox(height: 12),
@@ -167,7 +179,7 @@ class _OrderCard extends ConsumerWidget {
                       }
                     }
                   },
-                  child: Text(isBuy ? 'Sell to Buyer' : 'Buy'),
+                  child: Text(isBuy ? 'Sell to Buyer' : (l?.buy ?? 'Buy')),
                 ),
               ),
             ],
@@ -180,7 +192,7 @@ class _OrderCard extends ConsumerWidget {
                     await ref.read(p2pApiProvider).cancelOrder(order.id);
                     ref.invalidate(p2pMyOrdersProvider);
                   },
-                  child: const Text('Cancel Order'),
+                  child: Text(l?.cancel ?? 'Cancel Order'),
                 ),
               ),
             ],
@@ -245,6 +257,7 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l = S.of(context);
     final roomsAsync = ref.watch(roomsProvider);
 
     return Padding(
@@ -253,12 +266,12 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Create Order', style: Theme.of(context).textTheme.titleLarge),
+          Text(l?.createOrder ?? 'Create Order', style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 16),
           SegmentedButton<String>(
-            segments: const [
-              ButtonSegment(value: 'buy', label: Text('Buy')),
-              ButtonSegment(value: 'sell', label: Text('Sell')),
+            segments: [
+              ButtonSegment(value: 'buy', label: Text(l?.buy ?? 'Buy')),
+              ButtonSegment(value: 'sell', label: Text(l?.sell ?? 'Sell')),
             ],
             selected: {_type},
             onSelectionChanged: (s) => setState(() => _type = s.first),
@@ -272,7 +285,10 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
               onChanged: (v) => setState(() => _selectedRoomId = v),
             ),
             loading: () => const LinearProgressIndicator(),
-            error: (_, __) => const Text('Failed to load rooms'),
+            error: (e, _) => ErrorView(
+              message: e.toString(),
+              onRetry: () => ref.invalidate(roomsProvider),
+            ),
           ),
           const SizedBox(height: 12),
           TextFormField(controller: _sharesController, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Shares')),
@@ -281,7 +297,7 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
           const SizedBox(height: 24),
           ElevatedButton(
             onPressed: _loading ? null : _create,
-            child: _loading ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) : const Text('Create Order'),
+            child: _loading ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) : Text(l?.createOrder ?? 'Create Order'),
           ),
         ],
       ),

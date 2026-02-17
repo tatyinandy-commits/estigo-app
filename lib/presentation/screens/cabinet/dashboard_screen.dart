@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -8,6 +9,7 @@ import '../../../domain/providers/auth_provider.dart';
 import '../../../domain/providers/data_providers.dart';
 import '../../widgets/common/stat_card.dart';
 import '../../widgets/common/section_header.dart';
+import '../../widgets/common/error_view.dart';
 import '../../widgets/sheets/deposit_sheet.dart';
 
 class DashboardScreen extends ConsumerWidget {
@@ -83,12 +85,14 @@ class DashboardScreen extends ConsumerWidget {
                     },
                     loading: () =>
                         StatCard(title: l?.portfolio ?? 'Portfolio', value: '...', icon: Icons.pie_chart, color: AppColors.success),
-                    error: (_, __) =>
-                        StatCard(title: l?.portfolio ?? 'Portfolio', value: '-', icon: Icons.pie_chart, color: AppColors.success),
+                    error: (e, _) => ErrorView(
+                      message: e.toString(),
+                      onRetry: () => ref.invalidate(portfolioProvider),
+                    ),
                   ),
                 ),
               ],
-            ),
+            ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.03, end: 0, duration: 400.ms),
             const SizedBox(height: 12),
             Row(
               children: [
@@ -106,8 +110,10 @@ class DashboardScreen extends ConsumerWidget {
                     },
                     loading: () =>
                         StatCard(title: l?.monthlyIncome ?? 'Income', value: '...', icon: Icons.trending_up, color: AppColors.gold),
-                    error: (_, __) =>
-                        StatCard(title: l?.monthlyIncome ?? 'Income', value: '-', icon: Icons.trending_up, color: AppColors.gold),
+                    error: (e, _) => ErrorView(
+                      message: e.toString(),
+                      onRetry: () => ref.invalidate(portfolioProvider),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -120,7 +126,7 @@ class DashboardScreen extends ConsumerWidget {
                   ),
                 ),
               ],
-            ),
+            ).animate().fadeIn(duration: 400.ms, delay: 100.ms).slideY(begin: 0.03, end: 0, duration: 400.ms, delay: 100.ms),
             const SizedBox(height: 24),
 
             // Quick Actions
@@ -150,7 +156,7 @@ class DashboardScreen extends ConsumerWidget {
                   onTap: () => context.go('/cabinet/p2p'),
                 ),
               ],
-            ),
+            ).animate().fadeIn(duration: 400.ms, delay: 200.ms).slideY(begin: 0.03, end: 0, duration: 400.ms, delay: 200.ms),
             const SizedBox(height: 24),
 
             // Income chart
@@ -162,7 +168,10 @@ class DashboardScreen extends ConsumerWidget {
                 data: (data) => _IncomeChart(data: data),
                 loading: () =>
                     const Center(child: CircularProgressIndicator()),
-                error: (_, __) => const Center(child: Text('Failed to load')),
+                error: (e, _) => ErrorView(
+                  message: e.toString(),
+                  onRetry: () => ref.invalidate(monthlyIncomeProvider),
+                ),
               ),
             ),
             const SizedBox(height: 24),
@@ -223,8 +232,10 @@ class DashboardScreen extends ConsumerWidget {
               },
               loading: () =>
                   const Center(child: CircularProgressIndicator()),
-              error: (_, __) =>
-                  const Center(child: Text('Failed to load transactions')),
+              error: (e, _) => ErrorView(
+                message: e.toString(),
+                onRetry: () => ref.invalidate(recentTransactionsProvider),
+              ),
             ),
           ],
         ),

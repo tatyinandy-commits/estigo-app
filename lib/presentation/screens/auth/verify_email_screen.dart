@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
@@ -28,12 +29,16 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
       await ref.read(authApiProvider).verifyEmail(widget.token);
       setState(() { _success = true; _loading = false; });
     } catch (e) {
-      setState(() { _error = 'Verification failed'; _loading = false; });
+      setState(() {
+        _error = S.of(context)?.verificationFailed ?? 'Verification failed';
+        _loading = false;
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l = S.of(context);
     return Scaffold(
       backgroundColor: AppColors.dark,
       body: Center(
@@ -51,7 +56,9 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
                     ),
                     const SizedBox(height: 24),
                     Text(
-                      _success ? 'Email Verified!' : 'Verification Failed',
+                      _success
+                          ? (l?.emailVerified ?? 'Email Verified!')
+                          : (l?.verificationFailed ?? 'Verification Failed'),
                       style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
                     ),
                     if (_error != null) ...[
@@ -61,7 +68,9 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
                     const SizedBox(height: 32),
                     ElevatedButton(
                       onPressed: () => context.go(_success ? '/cabinet' : '/login'),
-                      child: Text(_success ? 'Continue' : 'Back to Login'),
+                      child: Text(_success
+                          ? (l?.continueBtn ?? 'Continue')
+                          : (l?.backToLogin ?? 'Back to Login')),
                     ),
                   ],
                 ),

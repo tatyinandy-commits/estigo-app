@@ -1,7 +1,10 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/config/env.dart';
+import 'package:dio/dio.dart';
 
 /// Shows a banner when the device is offline.
 class ConnectivityBanner extends StatefulWidget {
@@ -16,28 +19,24 @@ class ConnectivityBanner extends StatefulWidget {
 class _ConnectivityBannerState extends State<ConnectivityBanner> {
   bool _isOnline = true;
   Timer? _timer;
+  final _dio = Dio(BaseOptions(
+    connectTimeout: const Duration(seconds: 5),
+    receiveTimeout: const Duration(seconds: 5),
+  ));
 
   @override
   void initState() {
     super.initState();
-    if (!kIsWeb) {
-      _checkConnectivity();
-      _timer = Timer.periodic(
-          const Duration(seconds: 10), (_) => _checkConnectivity());
-    }
+    _checkConnectivity();
+    _timer = Timer.periodic(
+        const Duration(seconds: 15), (_) => _checkConnectivity());
   }
 
   Future<void> _checkConnectivity() async {
-    // Skip on web — dart:io not available
-    if (kIsWeb) return;
-    // On native, connectivity is checked via Dio ping
     try {
-      // Simple HTTP ping to check connectivity
-      final completer = Completer<bool>();
-      completer.complete(true); // Native will use actual check
-      final online = await completer.future;
-      if (mounted && online != _isOnline) {
-        setState(() => _isOnline = online);
+      await _dio.head('${Env.apiBase}/health');
+      if (mounted && !_isOnline) {
+        setState(() => _isOnline = true);
       }
     } catch (_) {
       if (mounted && _isOnline) {
@@ -49,6 +48,7 @@ class _ConnectivityBannerState extends State<ConnectivityBanner> {
   @override
   void dispose() {
     _timer?.cancel();
+    _dio.close();
     super.dispose();
   }
 
@@ -61,10 +61,10 @@ class _ConnectivityBannerState extends State<ConnectivityBanner> {
         Container(
           height: 32,
           color: AppColors.error,
-          child: const Center(
+          child: Center(
             child: Text(
-              'No internet connection',
-              style: TextStyle(
+              S.of(context)?.noInternet ?? 'No internet connection',
+              style: const TextStyle(
                   color: Colors.white,
                   fontSize: 12,
                   fontWeight: FontWeight.w500),
