@@ -11,7 +11,7 @@ class TransactionApi {
     int limit = 20,
     String? type,
   }) async {
-    final response = await _dio.get('/transactions', queryParameters: {
+    final response = await _dio.get('/portfolio/transactions', queryParameters: {
       'page': page,
       'limit': limit,
       if (type != null) 'type': type,

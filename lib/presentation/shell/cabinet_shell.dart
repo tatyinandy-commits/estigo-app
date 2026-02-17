@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme/app_theme.dart';
+import '../../data/models/user.dart';
 import '../../domain/providers/auth_provider.dart';
 import '../../domain/providers/data_providers.dart';
 import '../widgets/common/connectivity_banner.dart';
@@ -126,8 +127,8 @@ class CabinetShell extends ConsumerWidget {
             },
           ),
           const Divider(),
-          if (user?.roles?.contains('partner') == true ||
-              user?.role?.name == 'partner') ...[
+          if (user?.roles?.contains(UserRole.partner) == true ||
+              user?.role == UserRole.partner) ...[
             _drawerItem(
                 context, Icons.star, 'Partner Zone', '/partner'),
             const Divider(),

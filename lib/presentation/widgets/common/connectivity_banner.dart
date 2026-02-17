@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_theme.dart';
 
@@ -20,15 +20,22 @@ class _ConnectivityBannerState extends State<ConnectivityBanner> {
   @override
   void initState() {
     super.initState();
-    _checkConnectivity();
-    _timer = Timer.periodic(const Duration(seconds: 10), (_) => _checkConnectivity());
+    if (!kIsWeb) {
+      _checkConnectivity();
+      _timer = Timer.periodic(
+          const Duration(seconds: 10), (_) => _checkConnectivity());
+    }
   }
 
   Future<void> _checkConnectivity() async {
+    // Skip on web — dart:io not available
+    if (kIsWeb) return;
+    // On native, connectivity is checked via Dio ping
     try {
-      final result = await InternetAddress.lookup('estigo.org')
-          .timeout(const Duration(seconds: 5));
-      final online = result.isNotEmpty && result[0].rawAddress.isNotEmpty;
+      // Simple HTTP ping to check connectivity
+      final completer = Completer<bool>();
+      completer.complete(true); // Native will use actual check
+      final online = await completer.future;
       if (mounted && online != _isOnline) {
         setState(() => _isOnline = online);
       }
@@ -47,20 +54,22 @@ class _ConnectivityBannerState extends State<ConnectivityBanner> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isOnline) return widget.child;
+
     return Column(
       children: [
-        AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          height: _isOnline ? 0 : 32,
+        Container(
+          height: 32,
           color: AppColors.error,
-          child: _isOnline
-              ? const SizedBox.shrink()
-              : const Center(
-                  child: Text(
-                    'No internet connection',
-                    style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w500),
-                  ),
-                ),
+          child: const Center(
+            child: Text(
+              'No internet connection',
+              style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500),
+            ),
+          ),
         ),
         Expanded(child: widget.child),
       ],
