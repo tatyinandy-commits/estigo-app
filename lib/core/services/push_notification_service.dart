@@ -1,6 +1,5 @@
-import 'dart:io';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../network/api_client.dart';
@@ -18,10 +17,9 @@ class PushNotificationService {
   PushNotificationService(this._client);
 
   Future<void> initialize() async {
-    await Firebase.initializeApp();
+    final messaging = FirebaseMessaging.instance;
 
     // Request permission (iOS)
-    final messaging = FirebaseMessaging.instance;
     final settings = await messaging.requestPermission(
       alert: true,
       badge: true,
@@ -30,34 +28,44 @@ class PushNotificationService {
 
     if (settings.authorizationStatus == AuthorizationStatus.denied) return;
 
-    // Local notifications setup
-    const initSettingsIOS = DarwinInitializationSettings(
-      requestAlertPermission: false,
-      requestBadgePermission: false,
-      requestSoundPermission: false,
-    );
-    const initSettings = InitializationSettings(iOS: initSettingsIOS);
-    await _localNotifications.initialize(
-      initSettings,
-      onDidReceiveNotificationResponse: _onNotificationTap,
-    );
+    // Local notifications setup (not needed on web)
+    if (!kIsWeb) {
+      const initSettingsIOS = DarwinInitializationSettings(
+        requestAlertPermission: false,
+        requestBadgePermission: false,
+        requestSoundPermission: false,
+      );
+      const initSettingsAndroid =
+          AndroidInitializationSettings('@mipmap/ic_launcher');
+      const initSettings = InitializationSettings(
+        iOS: initSettingsIOS,
+        android: initSettingsAndroid,
+      );
+      await _localNotifications.initialize(
+        initSettings,
+        onDidReceiveNotificationResponse: _onNotificationTap,
+      );
 
-    // Notification channel (Android, but define for consistency)
-    const channel = AndroidNotificationChannel(
-      'estigo_default',
-      'Estigo Notifications',
-      importance: Importance.high,
-    );
-    await _localNotifications
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
-        ?.createNotificationChannel(channel);
+      const channel = AndroidNotificationChannel(
+        'estigo_default',
+        'Estigo Notifications',
+        importance: Importance.high,
+      );
+      await _localNotifications
+          .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>()
+          ?.createNotificationChannel(channel);
+    }
 
-    // Get FCM token and register with backend
-    final token = await messaging.getToken();
-    if (token != null) await _registerDeviceToken(token);
+    // Get FCM token — on web requires VAPID key (skip for now)
+    if (!kIsWeb) {
+      final token = await messaging.getToken();
+      if (token != null) await _registerDeviceToken(token, _guessPlatform());
 
-    // Listen for token refresh
-    messaging.onTokenRefresh.listen(_registerDeviceToken);
+      messaging.onTokenRefresh.listen(
+        (t) => _registerDeviceToken(t, _guessPlatform()),
+      );
+    }
 
     // Foreground messages → show local notification
     FirebaseMessaging.onMessage.listen(_showLocalNotification);
@@ -72,11 +80,22 @@ class PushNotificationService {
     }
   }
 
-  Future<void> _registerDeviceToken(String token) async {
+  String _guessPlatform() {
+    switch (defaultTargetPlatform) {
+      case TargetPlatform.iOS:
+        return 'ios';
+      case TargetPlatform.android:
+        return 'android';
+      default:
+        return 'web';
+    }
+  }
+
+  Future<void> _registerDeviceToken(String token, String platform) async {
     try {
       await _client.dio.post('/notifications/register-device', data: {
         'token': token,
-        'platform': Platform.isIOS ? 'ios' : 'android',
+        'platform': platform,
       });
     } catch (_) {
       // Silently fail — server may not have this endpoint yet
@@ -84,6 +103,7 @@ class PushNotificationService {
   }
 
   void _showLocalNotification(RemoteMessage message) {
+    if (kIsWeb) return; // local notifications not available on web
     final notification = message.notification;
     if (notification == null) return;
 
@@ -97,14 +117,18 @@ class PushNotificationService {
           presentBadge: true,
           presentSound: true,
         ),
+        android: AndroidNotificationDetails(
+          'estigo_default',
+          'Estigo Notifications',
+          importance: Importance.high,
+          priority: Priority.high,
+        ),
       ),
       payload: message.data['route'],
     );
   }
 
   void _handleNotificationTap(RemoteMessage message) {
-    // Deep link handling — data['route'] contains the Go route path
-    // This will be handled by the router via a callback
     final route = message.data['route'];
     if (route != null && _onRouteTap != null) {
       _onRouteTap!(route);

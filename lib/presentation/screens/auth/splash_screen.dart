@@ -5,6 +5,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:local_auth/local_auth.dart';
+import '../../../core/services/push_notification_service.dart';
 import '../../../core/storage/secure_storage.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../domain/providers/auth_provider.dart';
@@ -54,6 +55,13 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     debugPrint('Splash: auth status = ${auth.status}');
 
     if (auth.isAuthenticated) {
+      // Initialize push notifications after successful auth
+      try {
+        await ref.read(pushServiceProvider).initialize();
+      } catch (e) {
+        debugPrint('Splash: push init error: $e');
+      }
+
       // Check biometric lock (skip on web)
       if (!kIsWeb) {
         try {
