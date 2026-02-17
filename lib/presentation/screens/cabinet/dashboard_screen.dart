@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -25,9 +26,11 @@ class DashboardScreen extends ConsumerWidget {
         ) ??
         0;
 
+    final l = S.of(context);
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Welcome, ${user?.name ?? "Investor"}'),
+        title: Text(l?.welcome(user?.name ?? 'Investor') ?? 'Welcome, ${user?.name ?? "Investor"}'),
         actions: [
           Badge(
             isLabelVisible: unreadCount > 0,
@@ -59,7 +62,7 @@ class DashboardScreen extends ConsumerWidget {
               children: [
                 Expanded(
                   child: StatCard(
-                    title: 'Balance',
+                    title: l?.balance ?? 'Balance',
                     value: '${user?.balance.toStringAsFixed(0) ?? "0"} EUR',
                     icon: Icons.account_balance_wallet,
                     color: AppColors.info,
@@ -72,16 +75,16 @@ class DashboardScreen extends ConsumerWidget {
                       final total = shares.fold<double>(
                           0, (s, e) => s + e.currentValue);
                       return StatCard(
-                        title: 'Portfolio',
+                        title: l?.portfolio ?? 'Portfolio',
                         value: '${total.toStringAsFixed(0)} EUR',
                         icon: Icons.pie_chart,
                         color: AppColors.success,
                       );
                     },
                     loading: () =>
-                        const StatCard(title: 'Portfolio', value: '...', icon: Icons.pie_chart, color: AppColors.success),
+                        StatCard(title: l?.portfolio ?? 'Portfolio', value: '...', icon: Icons.pie_chart, color: AppColors.success),
                     error: (_, __) =>
-                        const StatCard(title: 'Portfolio', value: '-', icon: Icons.pie_chart, color: AppColors.success),
+                        StatCard(title: l?.portfolio ?? 'Portfolio', value: '-', icon: Icons.pie_chart, color: AppColors.success),
                   ),
                 ),
               ],
@@ -95,22 +98,22 @@ class DashboardScreen extends ConsumerWidget {
                       final income = shares.fold<double>(
                           0, (s, e) => s + e.totalIncome);
                       return StatCard(
-                        title: 'Income',
+                        title: l?.monthlyIncome ?? 'Income',
                         value: '${income.toStringAsFixed(0)} EUR',
                         icon: Icons.trending_up,
                         color: AppColors.gold,
                       );
                     },
                     loading: () =>
-                        const StatCard(title: 'Income', value: '...', icon: Icons.trending_up, color: AppColors.gold),
+                        StatCard(title: l?.monthlyIncome ?? 'Income', value: '...', icon: Icons.trending_up, color: AppColors.gold),
                     error: (_, __) =>
-                        const StatCard(title: 'Income', value: '-', icon: Icons.trending_up, color: AppColors.gold),
+                        StatCard(title: l?.monthlyIncome ?? 'Income', value: '-', icon: Icons.trending_up, color: AppColors.gold),
                   ),
                 ),
                 const SizedBox(width: 12),
-                const Expanded(
+                Expanded(
                   child: StatCard(
-                    title: 'Active P2P',
+                    title: l?.activeP2P ?? 'Active P2P',
                     value: '0',
                     icon: Icons.swap_horiz,
                     color: AppColors.warning,
@@ -121,19 +124,19 @@ class DashboardScreen extends ConsumerWidget {
             const SizedBox(height: 24),
 
             // Quick Actions
-            const SectionHeader(title: 'Quick Actions'),
+            SectionHeader(title: l?.quickActions ?? 'Quick Actions'),
             const SizedBox(height: 12),
             Row(
               children: [
                 _QuickAction(
                   icon: Icons.shopping_cart,
-                  label: 'Buy Shares',
+                  label: l?.buyShares ?? 'Buy Shares',
                   onTap: () => context.go('/cabinet/object'),
                 ),
                 const SizedBox(width: 12),
                 _QuickAction(
                   icon: Icons.add_card,
-                  label: 'Top Up',
+                  label: l?.topUpBalance ?? 'Top Up',
                   onTap: () => showModalBottomSheet(
                     context: context,
                     isScrollControlled: true,
@@ -143,7 +146,7 @@ class DashboardScreen extends ConsumerWidget {
                 const SizedBox(width: 12),
                 _QuickAction(
                   icon: Icons.swap_horiz,
-                  label: 'P2P Market',
+                  label: l?.p2pMarket ?? 'P2P Market',
                   onTap: () => context.go('/cabinet/p2p'),
                 ),
               ],
@@ -151,7 +154,7 @@ class DashboardScreen extends ConsumerWidget {
             const SizedBox(height: 24),
 
             // Income chart
-            const SectionHeader(title: 'Income (6 months)'),
+            SectionHeader(title: l?.incomeChart ?? 'Income (6 months)'),
             const SizedBox(height: 12),
             SizedBox(
               height: 200,
@@ -166,21 +169,21 @@ class DashboardScreen extends ConsumerWidget {
 
             // Recent transactions
             SectionHeader(
-              title: 'Recent Transactions',
+              title: l?.recentTransactions ?? 'Recent Transactions',
               action: TextButton(
                 onPressed: () => context.go('/cabinet/history'),
-                child: const Text('View All'),
+                child: Text(l?.viewAll ?? 'View All'),
               ),
             ),
             const SizedBox(height: 8),
             transactions.when(
               data: (list) {
                 if (list.isEmpty) {
-                  return const Padding(
-                    padding: EdgeInsets.all(24),
+                  return Padding(
+                    padding: const EdgeInsets.all(24),
                     child: Center(
-                        child: Text('No transactions yet',
-                            style: TextStyle(color: AppColors.textMuted))),
+                        child: Text(l?.noData ?? 'No transactions yet',
+                            style: const TextStyle(color: AppColors.textMuted))),
                   );
                 }
                 return Column(

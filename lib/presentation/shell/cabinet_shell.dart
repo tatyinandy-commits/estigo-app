@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme/app_theme.dart';
@@ -35,26 +36,26 @@ class CabinetShell extends ConsumerWidget {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex(context),
         onTap: (index) => context.go(_tabs[index]),
-        items: const [
+        items: [
           BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard_outlined),
-            activeIcon: Icon(Icons.dashboard),
-            label: 'Dashboard',
+            icon: const Icon(Icons.dashboard_outlined),
+            activeIcon: const Icon(Icons.dashboard),
+            label: S.of(context)?.dashboard ?? 'Dashboard',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.apartment_outlined),
-            activeIcon: Icon(Icons.apartment),
-            label: 'Object',
+            icon: const Icon(Icons.apartment_outlined),
+            activeIcon: const Icon(Icons.apartment),
+            label: S.of(context)?.object ?? 'Object',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.pie_chart_outline),
-            activeIcon: Icon(Icons.pie_chart),
-            label: 'Portfolio',
+            icon: const Icon(Icons.pie_chart_outline),
+            activeIcon: const Icon(Icons.pie_chart),
+            label: S.of(context)?.portfolio ?? 'Portfolio',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.swap_horiz_outlined),
-            activeIcon: Icon(Icons.swap_horiz),
-            label: 'P2P',
+            icon: const Icon(Icons.swap_horiz_outlined),
+            activeIcon: const Icon(Icons.swap_horiz),
+            label: S.of(context)?.p2pMarket ?? 'P2P',
           ),
         ],
       ),
@@ -107,20 +108,20 @@ class CabinetShell extends ConsumerWidget {
               ],
             ),
           ),
-          _drawerItem(context, Icons.trending_up, 'Income', '/cabinet/income'),
-          _drawerItem(context, Icons.history, 'History', '/cabinet/history'),
-          _drawerItem(context, Icons.people, 'Referral', '/cabinet/referral'),
+          _drawerItem(context, Icons.trending_up, S.of(context)?.income ?? 'Income', '/cabinet/income'),
+          _drawerItem(context, Icons.history, S.of(context)?.history ?? 'History', '/cabinet/history'),
+          _drawerItem(context, Icons.people, S.of(context)?.referral ?? 'Referral', '/cabinet/referral'),
           _drawerItem(
-              context, Icons.settings, 'Settings', '/cabinet/settings'),
+              context, Icons.settings, S.of(context)?.settings ?? 'Settings', '/cabinet/settings'),
           _drawerItem(
-              context, Icons.support_agent, 'Support', '/cabinet/support'),
+              context, Icons.support_agent, S.of(context)?.support ?? 'Support', '/cabinet/support'),
           ListTile(
             leading: Badge(
               isLabelVisible: unreadCount > 0,
               label: Text('$unreadCount'),
               child: const Icon(Icons.notifications_outlined),
             ),
-            title: const Text('Notifications'),
+            title: Text(S.of(context)?.notifications ?? 'Notifications'),
             onTap: () {
               Navigator.pop(context);
               context.go('/cabinet/notifications');
@@ -130,13 +131,13 @@ class CabinetShell extends ConsumerWidget {
           if (user?.roles?.contains(UserRole.partner) == true ||
               user?.role == UserRole.partner) ...[
             _drawerItem(
-                context, Icons.star, 'Partner Zone', '/partner'),
+                context, Icons.star, S.of(context)?.partnerDashboard ?? 'Partner Zone', '/partner'),
             const Divider(),
           ],
           ListTile(
             leading: const Icon(Icons.logout, color: AppColors.error),
-            title: const Text('Logout',
-                style: TextStyle(color: AppColors.error)),
+            title: Text(S.of(context)?.logout ?? 'Logout',
+                style: const TextStyle(color: AppColors.error)),
             onTap: () {
               Navigator.pop(context);
               ref.read(authProvider.notifier).logout();

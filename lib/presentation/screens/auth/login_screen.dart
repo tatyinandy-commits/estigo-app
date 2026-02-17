@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
@@ -45,6 +46,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
+    final l = S.of(context);
 
     return Scaffold(
       backgroundColor: AppColors.dark,
@@ -90,7 +92,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 const SizedBox(height: 8),
                 Center(
                   child: Text(
-                    'Sign in to your account',
+                    l?.signIn ?? 'Sign in to your account',
                     style: TextStyle(
                       fontSize: 14,
                       color: Colors.white.withOpacity(0.6),
@@ -122,10 +124,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   keyboardType: TextInputType.emailAddress,
                   autocorrect: false,
                   style: const TextStyle(color: Colors.white),
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    labelStyle: TextStyle(color: Colors.white54),
-                    prefixIcon: Icon(Icons.email_outlined, color: Colors.white38),
+                  decoration: InputDecoration(
+                    labelText: l?.email ?? 'Email',
+                    labelStyle: const TextStyle(color: Colors.white54),
+                    prefixIcon: const Icon(Icons.email_outlined, color: Colors.white38),
                   ),
                   validator: (v) {
                     if (v == null || v.isEmpty) return 'Enter email';
@@ -141,7 +143,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   obscureText: _obscurePassword,
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
-                    labelText: 'Password',
+                    labelText: l?.password ?? 'Password',
                     labelStyle: const TextStyle(color: Colors.white54),
                     prefixIcon:
                         const Icon(Icons.lock_outline, color: Colors.white38),
@@ -168,8 +170,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   alignment: Alignment.centerRight,
                   child: TextButton(
                     onPressed: () => context.push('/forgot-password'),
-                    child: const Text('Forgot password?',
-                        style: TextStyle(color: AppColors.gold)),
+                    child: Text(l?.forgotPassword ?? 'Forgot password?',
+                        style: const TextStyle(color: AppColors.gold)),
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -186,7 +188,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             color: Colors.white,
                           ),
                         )
-                      : const Text('Sign In'),
+                      : Text(l?.signIn ?? 'Sign In'),
                 ),
                 const SizedBox(height: 16),
 
@@ -194,12 +196,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text("Don't have an account?",
-                        style: TextStyle(color: Colors.white54)),
+                    Text(l?.dontHaveAccount ?? "Don't have an account?",
+                        style: const TextStyle(color: Colors.white54)),
                     TextButton(
                       onPressed: () => context.push('/register'),
-                      child: const Text('Sign Up',
-                          style: TextStyle(color: AppColors.gold)),
+                      child: Text(l?.signUp ?? 'Sign Up',
+                          style: const TextStyle(color: AppColors.gold)),
                     ),
                   ],
                 ),
