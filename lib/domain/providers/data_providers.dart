@@ -76,6 +76,11 @@ final incomeAccrualsProvider =
   return api.getIncomeAccruals();
 });
 
+final payoutsProvider = FutureProvider<List<Payout>>((ref) async {
+  final api = ref.watch(transactionApiProvider);
+  return api.getPayouts();
+});
+
 // Notifications
 final notificationsProvider =
     FutureProvider<List<AppNotification>>((ref) async {

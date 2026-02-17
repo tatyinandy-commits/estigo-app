@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:local_auth/local_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/l10n/l10n.dart';
@@ -375,29 +376,75 @@ class _SecurityTabState extends ConsumerState<_SecurityTab> {
 // Notifications Tab
 // ─────────────────────────────────────────────
 
-class _NotificationsTab extends StatelessWidget {
+class _NotificationsTab extends StatefulWidget {
+  @override
+  State<_NotificationsTab> createState() => _NotificationsTabState();
+}
+
+class _NotificationsTabState extends State<_NotificationsTab> {
+  static const _keys = [
+    'notif_income',
+    'notif_payout',
+    'notif_p2p',
+    'notif_news',
+    'notif_security',
+    'notif_reports',
+  ];
+
+  final Map<String, bool> _prefs = {};
+  bool _loaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPrefs();
+  }
+
+  Future<void> _loadPrefs() async {
+    final sp = await SharedPreferences.getInstance();
+    final map = <String, bool>{};
+    for (final key in _keys) {
+      map[key] = sp.getBool(key) ?? true;
+    }
+    if (mounted) {
+      setState(() {
+        _prefs.addAll(map);
+        _loaded = true;
+      });
+    }
+  }
+
+  Future<void> _toggle(String key, bool value) async {
+    setState(() => _prefs[key] = value);
+    final sp = await SharedPreferences.getInstance();
+    await sp.setBool(key, value);
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (!_loaded) {
+      return const Center(child: CircularProgressIndicator());
+    }
     return ListView(padding: const EdgeInsets.all(24), children: [
       Text('Notification Settings', style: Theme.of(context).textTheme.titleLarge),
       const SizedBox(height: 16),
-      _notifRow('Income Accrual', 'Monthly accruals on your shares'),
-      _notifRow('Payout', 'Withdrawal status updates'),
-      _notifRow('P2P Trades', 'New orders and completed trades'),
-      _notifRow('Platform News', 'Updates, promotions'),
-      _notifRow('Security', 'Account logins, password changes'),
-      _notifRow('Reports', 'Monthly object reports'),
+      _notifRow('notif_income', 'Income Accrual', 'Monthly accruals on your shares'),
+      _notifRow('notif_payout', 'Payout', 'Withdrawal status updates'),
+      _notifRow('notif_p2p', 'P2P Trades', 'New orders and completed trades'),
+      _notifRow('notif_news', 'Platform News', 'Updates, promotions'),
+      _notifRow('notif_security', 'Security', 'Account logins, password changes'),
+      _notifRow('notif_reports', 'Reports', 'Monthly object reports'),
     ]);
   }
 
-  Widget _notifRow(String title, String subtitle) {
+  Widget _notifRow(String key, String title, String subtitle) {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: SwitchListTile(
         title: Text(title),
         subtitle: Text(subtitle, style: const TextStyle(fontSize: 12)),
-        value: true,
-        onChanged: (_) {/* TODO: persist notification prefs */},
+        value: _prefs[key] ?? true,
+        onChanged: (v) => _toggle(key, v),
         activeColor: AppColors.gold,
       ),
     );

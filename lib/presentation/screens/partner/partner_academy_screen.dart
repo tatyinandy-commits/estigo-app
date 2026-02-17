@@ -45,7 +45,11 @@ class PartnerAcademyScreen extends StatelessWidget {
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Module content coming soon')),
+                        );
+                      },
                       child: const Text('Start'),
                     ),
                   ),

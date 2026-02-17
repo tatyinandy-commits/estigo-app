@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../data/models/models.dart';
 import '../../../domain/providers/data_providers.dart';
 import '../../../domain/providers/api_providers.dart';
 
@@ -97,9 +98,96 @@ class _IncomeScreenState extends ConsumerState<IncomeScreen> with SingleTickerPr
               },
             ),
           ),
-          // Payouts placeholder
-          const Center(child: Text('Payout history will appear here')),
+          // Payouts
+          _PayoutsTab(),
         ],
+      ),
+    );
+  }
+}
+
+class _PayoutsTab extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final payoutsAsync = ref.watch(payoutsProvider);
+
+    return RefreshIndicator(
+      onRefresh: () async => ref.invalidate(payoutsProvider),
+      child: payoutsAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) => Center(child: Text('Error: $e')),
+        data: (payouts) {
+          if (payouts.isEmpty) {
+            return ListView(
+              children: const [
+                SizedBox(height: 200),
+                Center(child: Text('No payouts yet')),
+              ],
+            );
+          }
+          return ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: payouts.length,
+            itemBuilder: (context, index) {
+              final p = payouts[index];
+              return Card(
+                margin: const EdgeInsets.only(bottom: 8),
+                child: ListTile(
+                  title: Text(
+                    '\u20AC${p.amount.toStringAsFixed(2)}',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: Text(
+                    '${_maskIban(p.iban)} \u2022 ${_formatDate(p.createdAt)}',
+                  ),
+                  trailing: _StatusBadge(status: p.status),
+                ),
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  static String _maskIban(String iban) {
+    if (iban.length <= 4) return iban;
+    return '****${iban.substring(iban.length - 4)}';
+  }
+
+  static String _formatDate(String iso) {
+    try {
+      final dt = DateTime.parse(iso);
+      return '${dt.day.toString().padLeft(2, '0')}.${dt.month.toString().padLeft(2, '0')}.${dt.year}';
+    } catch (_) {
+      return iso;
+    }
+  }
+}
+
+class _StatusBadge extends StatelessWidget {
+  final String status;
+  const _StatusBadge({required this.status});
+
+  @override
+  Widget build(BuildContext context) {
+    final (Color bg, Color fg) = switch (status) {
+      'pending' => (AppColors.warning, Colors.black87),
+      'approved' => (AppColors.info, Colors.white),
+      'completed' => (AppColors.success, Colors.white),
+      'rejected' => (AppColors.error, Colors.white),
+      _ => (AppColors.textMuted, Colors.white),
+    };
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        status[0].toUpperCase() + status.substring(1),
+        style: TextStyle(color: fg, fontSize: 12, fontWeight: FontWeight.w600),
       ),
     );
   }

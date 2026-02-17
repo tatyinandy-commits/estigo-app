@@ -32,7 +32,10 @@ class AppColors {
 class AppTheme {
   AppTheme._();
 
+  static const _fontFamily = 'Inter';
+
   static ThemeData get light => ThemeData(
+        fontFamily: _fontFamily,
         brightness: Brightness.light,
         colorScheme: ColorScheme.light(
           primary: AppColors.gold,
@@ -135,6 +138,7 @@ class AppTheme {
       );
 
   static ThemeData get dark => ThemeData(
+        fontFamily: _fontFamily,
         brightness: Brightness.dark,
         colorScheme: ColorScheme.dark(
           primary: AppColors.gold,

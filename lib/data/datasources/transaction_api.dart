@@ -26,6 +26,12 @@ class TransactionApi {
     return list.map((e) => MonthlyIncome.fromJson(e)).toList();
   }
 
+  Future<List<Payout>> getPayouts() async {
+    final response = await _dio.get('/income/payouts');
+    final list = response.data['data'] as List;
+    return list.map((e) => Payout.fromJson(e)).toList();
+  }
+
   Future<void> requestPayout({
     required double amount,
     required String iban,
