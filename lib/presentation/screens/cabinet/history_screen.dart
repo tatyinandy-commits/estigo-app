@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../domain/providers/data_providers.dart';
 import '../../../data/models/models.dart';
+import '../../widgets/common/error_view.dart';
 
 class HistoryScreen extends ConsumerStatefulWidget {
   const HistoryScreen({super.key});
@@ -17,10 +19,11 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = S.of(context);
     final txAsync = ref.watch(transactionsProvider({'page': _page, 'limit': 20, 'type': _filter}));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Transaction History')),
+      appBar: AppBar(title: Text(l?.transactionHistory ?? 'Transaction History')),
       body: Column(
         children: [
           // Filters
@@ -28,12 +31,12 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Row(children: [
-              _FilterChip('All', null),
-              _FilterChip('Deposits', 'deposit'),
-              _FilterChip('Purchases', 'share_purchase'),
-              _FilterChip('Sales', 'share_sale'),
-              _FilterChip('Accruals', 'income_accrual'),
-              _FilterChip('Withdrawals', 'withdrawal'),
+              _FilterChip(l?.all ?? 'All', null),
+              _FilterChip(l?.deposits ?? 'Deposits', 'deposit'),
+              _FilterChip(l?.purchases ?? 'Purchases', 'share_purchase'),
+              _FilterChip(l?.sales ?? 'Sales', 'share_sale'),
+              _FilterChip(l?.accruals ?? 'Accruals', 'income_accrual'),
+              _FilterChip(l?.withdrawals ?? 'Withdrawals', 'withdrawal'),
             ]),
           ),
           Expanded(
@@ -41,10 +44,10 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
               onRefresh: () async => ref.invalidate(transactionsProvider({'page': _page, 'limit': 20, 'type': _filter})),
               child: txAsync.when(
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (e, _) => Center(child: Text('Error: $e')),
+                error: (e, _) => ErrorView(message: e.toString(), onRetry: () => ref.invalidate(transactionsProvider({'page': _page, 'limit': 20, 'type': _filter}))),
                 data: (transactions) {
                   if (transactions.isEmpty) {
-                    return const Center(child: Text('No transactions', style: TextStyle(color: AppColors.textMuted)));
+                    return Center(child: Text(l?.noTransactions ?? 'No transactions', style: const TextStyle(color: AppColors.textMuted)));
                   }
                   return ListView.builder(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -65,7 +68,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
                             Text('${isPositive ? "+" : "-"}${tx.amount.toStringAsFixed(0)} EUR', style: TextStyle(fontWeight: FontWeight.w600, color: isPositive ? AppColors.success : AppColors.error)),
-                            Text(_statusLabel(tx.status), style: TextStyle(fontSize: 10, color: _statusColor(tx.status))),
+                            Text(_statusLabel(tx.status, l), style: TextStyle(fontSize: 10, color: _statusColor(tx.status))),
                           ],
                         ),
                       );
@@ -94,11 +97,11 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     );
   }
 
-  String _statusLabel(TransactionStatus s) {
+  String _statusLabel(TransactionStatus s, S? l) {
     switch (s) {
-      case TransactionStatus.completed: return 'Completed';
-      case TransactionStatus.pending: return 'Pending';
-      case TransactionStatus.failed: return 'Failed';
+      case TransactionStatus.completed: return l?.completed ?? 'Completed';
+      case TransactionStatus.pending: return l?.pending ?? 'Pending';
+      case TransactionStatus.failed: return l?.failed ?? 'Failed';
     }
   }
 

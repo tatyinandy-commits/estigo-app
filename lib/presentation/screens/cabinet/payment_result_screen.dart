@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 
@@ -8,6 +9,8 @@ class PaymentResultScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = S.of(context);
+
     return Scaffold(
       body: Center(
         child: Padding(
@@ -22,26 +25,26 @@ class PaymentResultScreen extends StatelessWidget {
               ),
               const SizedBox(height: 24),
               Text(
-                success ? 'Payment Successful!' : 'Payment Cancelled',
+                success ? (l?.paymentSuccess ?? 'Payment Successful!') : (l?.paymentCancelled ?? 'Payment Cancelled'),
                 style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 12),
               Text(
                 success
-                    ? 'Your payment has been confirmed. Shares will be credited shortly.'
-                    : 'Payment was cancelled. No funds were charged.',
+                    ? (l?.paymentConfirmedDesc ?? 'Your payment has been confirmed. Shares will be credited shortly.')
+                    : (l?.paymentCancelledDesc ?? 'Payment was cancelled. No funds were charged.'),
                 textAlign: TextAlign.center,
                 style: const TextStyle(color: AppColors.textMuted),
               ),
               const SizedBox(height: 32),
               ElevatedButton(
                 onPressed: () => context.go(success ? '/cabinet/portfolio' : '/cabinet/object'),
-                child: Text(success ? 'My Portfolio' : 'Back to Object'),
+                child: Text(success ? (l?.myPortfolio ?? 'My Portfolio') : (l?.backToObject ?? 'Back to Object')),
               ),
               const SizedBox(height: 12),
               TextButton(
                 onPressed: () => context.go('/cabinet'),
-                child: const Text('Home'),
+                child: Text(l?.home ?? 'Home'),
               ),
             ],
           ),

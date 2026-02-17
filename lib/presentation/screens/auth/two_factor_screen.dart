@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
@@ -40,6 +41,7 @@ class _TwoFactorScreenState extends ConsumerState<TwoFactorScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = S.of(context);
     final authState = ref.watch(authProvider);
 
     return Scaffold(
@@ -58,15 +60,15 @@ class _TwoFactorScreenState extends ConsumerState<TwoFactorScreen> {
           children: [
             const Icon(Icons.security, size: 48, color: AppColors.gold),
             const SizedBox(height: 24),
-            const Text(
-              'Two-Factor Authentication',
-              style: TextStyle(
+            Text(
+              l?.twoFactorAuth ?? 'Two-Factor Authentication',
+              style: const TextStyle(
                   fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),
             Text(
-              'Enter the 6-digit code from your authenticator app',
+              l?.enter2FACode ?? 'Enter the 6-digit code from your authenticator app',
               style: TextStyle(color: Colors.white.withOpacity(0.6)),
               textAlign: TextAlign.center,
             ),
@@ -109,7 +111,7 @@ class _TwoFactorScreenState extends ConsumerState<TwoFactorScreen> {
                       height: 20,
                       child: CircularProgressIndicator(
                           strokeWidth: 2, color: Colors.white))
-                  : const Text('Verify'),
+                  : Text(l?.verify ?? 'Verify'),
             ),
           ],
         ),

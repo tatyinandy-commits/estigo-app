@@ -1,23 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../domain/providers/data_providers.dart';
+import '../../widgets/common/error_view.dart';
 
 class PartnerReferralsScreen extends ConsumerWidget {
   const PartnerReferralsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = S.of(context);
     final partnerAsync = ref.watch(partnerDataProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Referrals')),
+      appBar: AppBar(title: Text(l?.referrals ?? 'Referrals')),
       body: partnerAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => ErrorView(message: e.toString(), onRetry: () => ref.invalidate(partnerDataProvider)),
         data: (partner) {
           if (partner.referrals.isEmpty) {
-            return const Center(child: Text('No referrals yet', style: TextStyle(color: AppColors.textMuted)));
+            return Center(child: Text(l?.noReferralsYet ?? 'No referrals yet', style: const TextStyle(color: AppColors.textMuted)));
           }
           return ListView.builder(
             padding: const EdgeInsets.all(16),
@@ -29,7 +32,7 @@ class PartnerReferralsScreen extends ConsumerWidget {
                 child: ListTile(
                   leading: CircleAvatar(child: Text(r.name[0].toUpperCase())),
                   title: Text(r.name),
-                  subtitle: Text('Registered: ${r.registeredAt.substring(0, 10)}'),
+                  subtitle: Text('${l?.registered ?? 'Registered'}: ${r.registeredAt.substring(0, 10)}'),
                   trailing: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.end,

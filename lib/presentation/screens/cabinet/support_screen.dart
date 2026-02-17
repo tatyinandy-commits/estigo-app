@@ -1,24 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../domain/providers/data_providers.dart';
 import '../../../domain/providers/api_providers.dart';
+import '../../widgets/common/error_view.dart';
 
 class SupportScreen extends ConsumerWidget {
   const SupportScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = S.of(context);
     final ticketsAsync = ref.watch(ticketsProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Support'),
+        title: Text(l?.support ?? 'Support'),
         actions: [
           TextButton.icon(
             onPressed: () => _showNewTicket(context, ref),
             icon: const Icon(Icons.add),
-            label: const Text('New'),
+            label: Text(l?.newBtn ?? 'New'),
           ),
         ],
       ),
@@ -26,16 +29,16 @@ class SupportScreen extends ConsumerWidget {
         onRefresh: () async => ref.invalidate(ticketsProvider),
         child: ticketsAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Center(child: Text('Error: $e')),
+          error: (e, _) => ErrorView(message: e.toString(), onRetry: () => ref.invalidate(ticketsProvider)),
           data: (tickets) {
             if (tickets.isEmpty) {
-              return const Center(
+              return Center(
                 child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  Icon(Icons.support_agent, size: 64, color: AppColors.textMuted),
-                  SizedBox(height: 16),
-                  Text('No tickets yet'),
-                  SizedBox(height: 8),
-                  Text('Create a ticket if you need help', style: TextStyle(color: AppColors.textMuted)),
+                  const Icon(Icons.support_agent, size: 64, color: AppColors.textMuted),
+                  const SizedBox(height: 16),
+                  Text(l?.noTickets ?? 'No tickets yet'),
+                  const SizedBox(height: 8),
+                  Text(l?.createTicketHelp ?? 'Create a ticket if you need help', style: const TextStyle(color: AppColors.textMuted)),
                 ]),
               );
             }
@@ -79,26 +82,29 @@ class SupportScreen extends ConsumerWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (ctx) => Padding(
-        padding: EdgeInsets.only(left: 24, right: 24, top: 24, bottom: MediaQuery.of(ctx).viewInsets.bottom + 24),
-        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          Text('New Ticket', style: Theme.of(ctx).textTheme.titleLarge),
-          const SizedBox(height: 16),
-          TextFormField(controller: subjectC, decoration: const InputDecoration(labelText: 'Subject')),
-          const SizedBox(height: 12),
-          TextFormField(controller: messageC, maxLines: 4, decoration: const InputDecoration(labelText: 'Message')),
-          const SizedBox(height: 24),
-          ElevatedButton(
-            onPressed: () async {
-              if (subjectC.text.isEmpty || messageC.text.isEmpty) return;
-              await ref.read(supportApiProvider).createTicket(subject: subjectC.text, message: messageC.text);
-              ref.invalidate(ticketsProvider);
-              if (ctx.mounted) Navigator.pop(ctx);
-            },
-            child: const Text('Submit'),
-          ),
-        ]),
-      ),
+      builder: (ctx) {
+        final sl = S.of(ctx);
+        return Padding(
+          padding: EdgeInsets.only(left: 24, right: 24, top: 24, bottom: MediaQuery.of(ctx).viewInsets.bottom + 24),
+          child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            Text(sl?.newTicket ?? 'New Ticket', style: Theme.of(ctx).textTheme.titleLarge),
+            const SizedBox(height: 16),
+            TextFormField(controller: subjectC, decoration: InputDecoration(labelText: sl?.subject ?? 'Subject')),
+            const SizedBox(height: 12),
+            TextFormField(controller: messageC, maxLines: 4, decoration: InputDecoration(labelText: sl?.message ?? 'Message')),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: () async {
+                if (subjectC.text.isEmpty || messageC.text.isEmpty) return;
+                await ref.read(supportApiProvider).createTicket(subject: subjectC.text, message: messageC.text);
+                ref.invalidate(ticketsProvider);
+                if (ctx.mounted) Navigator.pop(ctx);
+              },
+              child: Text(sl?.submit ?? 'Submit'),
+            ),
+          ]),
+        );
+      },
     );
   }
 }

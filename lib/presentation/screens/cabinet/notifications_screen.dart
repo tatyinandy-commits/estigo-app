@@ -1,26 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../domain/providers/data_providers.dart';
 import '../../../domain/providers/api_providers.dart';
+import '../../widgets/common/error_view.dart';
 
 class NotificationsScreen extends ConsumerWidget {
   const NotificationsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = S.of(context);
     final notifAsync = ref.watch(notificationsProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Notifications'),
+        title: Text(l?.notifications ?? 'Notifications'),
         actions: [
           TextButton(
             onPressed: () async {
               await ref.read(userApiProvider).markAllNotificationsRead();
               ref.invalidate(notificationsProvider);
             },
-            child: const Text('Mark all read'),
+            child: Text(l?.markAllRead ?? 'Mark all read'),
           ),
         ],
       ),
@@ -28,10 +31,10 @@ class NotificationsScreen extends ConsumerWidget {
         onRefresh: () async => ref.invalidate(notificationsProvider),
         child: notifAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Center(child: Text('Error: $e')),
+          error: (e, _) => ErrorView(message: e.toString(), onRetry: () => ref.invalidate(notificationsProvider)),
           data: (notifications) {
             if (notifications.isEmpty) {
-              return const Center(child: Text('No notifications', style: TextStyle(color: AppColors.textMuted)));
+              return Center(child: Text(l?.noNotifications ?? 'No notifications', style: const TextStyle(color: AppColors.textMuted)));
             }
             return ListView.builder(
               itemCount: notifications.length,
