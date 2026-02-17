@@ -6,6 +6,8 @@ class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) return web;
     switch (defaultTargetPlatform) {
+      case TargetPlatform.android:
+        return android;
       case TargetPlatform.iOS:
         return ios;
       default:
@@ -22,6 +24,14 @@ class DefaultFirebaseOptions {
     projectId: 'estigo-mobile',
     storageBucket: 'estigo-mobile.firebasestorage.app',
     authDomain: 'estigo-mobile.firebaseapp.com',
+  );
+
+  static const FirebaseOptions android = FirebaseOptions(
+    apiKey: 'AIzaSyDgTgR4u9H4sNmv7-0RUqmx82N2mYro0r4',
+    appId: '1:40756661934:android:42aa6d66d48e14623a273f',
+    messagingSenderId: '40756661934',
+    projectId: 'estigo-mobile',
+    storageBucket: 'estigo-mobile.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(

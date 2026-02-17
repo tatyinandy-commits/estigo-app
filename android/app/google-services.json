@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "40756661934",
+    "project_id": "estigo-mobile",
+    "storage_bucket": "estigo-mobile.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:40756661934:android:42aa6d66d48e14623a273f",
+        "android_client_info": {
+          "package_name": "org.estigo.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDgTgR4u9H4sNmv7-0RUqmx82N2mYro0r4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
