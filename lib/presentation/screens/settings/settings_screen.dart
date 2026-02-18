@@ -222,7 +222,7 @@ class _SecurityTabState extends ConsumerState<_SecurityTab> {
     }
     setState(() => _loading = true);
     try {
-      await ref.read(userApiProvider).changePassword(_currentC.text, _newC.text);
+      await ref.read(userApiProvider).changePassword(_currentC.text, _newC.text, _confirmC.text);
       _currentC.clear();
       _newC.clear();
       _confirmC.clear();

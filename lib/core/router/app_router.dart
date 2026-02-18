@@ -24,6 +24,7 @@ import '../../presentation/screens/settings/settings_screen.dart';
 import '../../presentation/screens/partner/partner_dashboard_screen.dart';
 import '../../presentation/screens/partner/partner_referrals_screen.dart';
 import '../../presentation/screens/partner/partner_academy_screen.dart';
+import '../../presentation/screens/admin/admin_users_screen.dart';
 import '../../presentation/shell/cabinet_shell.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -187,6 +188,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/partner/academy',
         builder: (context, state) => const PartnerAcademyScreen(),
+      ),
+
+      // Admin routes
+      GoRoute(
+        path: '/admin/users',
+        builder: (context, state) => const AdminUsersScreen(),
       ),
     ],
   );

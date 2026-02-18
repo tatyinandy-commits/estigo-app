@@ -29,6 +29,34 @@ class AuthApi {
     return LoginResponse.fromJson(response.data['data']);
   }
 
+  Future<LoginResponse> googleAuth(String idToken) async {
+    final response = await _dio.post('/auth/google', data: {
+      'idToken': idToken,
+    });
+    return LoginResponse.fromJson(response.data['data']);
+  }
+
+  Future<LoginResponse> appleAuth(
+    String idToken, {
+    String? firstName,
+    String? lastName,
+    String? email,
+  }) async {
+    final response = await _dio.post('/auth/apple', data: {
+      'idToken': idToken,
+      if (firstName != null || lastName != null || email != null)
+        'user': {
+          if (email != null) 'email': email,
+          if (firstName != null || lastName != null)
+            'name': {
+              if (firstName != null) 'firstName': firstName,
+              if (lastName != null) 'lastName': lastName,
+            },
+        },
+    });
+    return LoginResponse.fromJson(response.data['data']);
+  }
+
   Future<User> getMe() async {
     final response = await _dio.get('/auth/me');
     return User.fromJson(response.data['data']);
@@ -58,6 +86,15 @@ class AuthApi {
 
   Future<void> verifyEmail(String token) async {
     await _dio.post('/auth/verify-email', data: {'token': token});
+  }
+
+  Future<void> resendVerification() async {
+    await _dio.post('/auth/resend-verification');
+  }
+
+  Future<List<Map<String, dynamic>>> getLoginHistory() async {
+    final response = await _dio.get('/auth/login-history');
+    return List<Map<String, dynamic>>.from(response.data['data']);
   }
 
   Future<Map<String, dynamic>> setup2FA() async {

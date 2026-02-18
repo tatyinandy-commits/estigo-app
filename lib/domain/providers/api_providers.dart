@@ -9,6 +9,7 @@ import '../../data/datasources/payment_api.dart';
 import '../../data/datasources/user_api.dart';
 import '../../data/datasources/support_api.dart';
 import '../../data/datasources/kyc_api.dart';
+import '../../data/datasources/admin_api.dart';
 
 final authApiProvider = Provider<AuthApi>((ref) {
   final client = ref.watch(apiClientProvider);
@@ -53,4 +54,9 @@ final supportApiProvider = Provider<SupportApi>((ref) {
 final kycApiProvider = Provider<KycApi>((ref) {
   final client = ref.watch(apiClientProvider);
   return KycApi(client.dio);
+});
+
+final adminApiProvider = Provider<AdminApi>((ref) {
+  final client = ref.watch(apiClientProvider);
+  return AdminApi(client.dio);
 });

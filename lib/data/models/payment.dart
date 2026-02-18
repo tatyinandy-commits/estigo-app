@@ -4,31 +4,31 @@ part 'payment.freezed.dart';
 part 'payment.g.dart';
 
 enum PaymentPurpose {
-  @JsonValue('deposit')
+  @JsonValue('DEPOSIT')
   deposit,
-  @JsonValue('share_purchase')
+  @JsonValue('SHARE_PURCHASE')
   sharePurchase,
 }
 
 enum PaymentProvider {
-  @JsonValue('stripe')
+  @JsonValue('STRIPE')
   stripe,
-  @JsonValue('coingate')
-  coingate,
-  @JsonValue('balance')
+  @JsonValue('NOWPAYMENTS')
+  nowpayments,
+  @JsonValue('BALANCE')
   balance,
 }
 
 enum PaymentStatus {
-  @JsonValue('pending')
+  @JsonValue('PENDING')
   pending,
-  @JsonValue('processing')
+  @JsonValue('PROCESSING')
   processing,
-  @JsonValue('completed')
+  @JsonValue('COMPLETED')
   completed,
-  @JsonValue('expired')
+  @JsonValue('EXPIRED')
   expired,
-  @JsonValue('failed')
+  @JsonValue('FAILED')
   failed,
 }
 

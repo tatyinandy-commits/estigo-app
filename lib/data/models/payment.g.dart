@@ -34,22 +34,22 @@ Map<String, dynamic> _$$PaymentImplToJson(_$PaymentImpl instance) =>
     };
 
 const _$PaymentPurposeEnumMap = {
-  PaymentPurpose.deposit: 'deposit',
-  PaymentPurpose.sharePurchase: 'share_purchase',
+  PaymentPurpose.deposit: 'DEPOSIT',
+  PaymentPurpose.sharePurchase: 'SHARE_PURCHASE',
 };
 
 const _$PaymentProviderEnumMap = {
-  PaymentProvider.stripe: 'stripe',
-  PaymentProvider.coingate: 'coingate',
-  PaymentProvider.balance: 'balance',
+  PaymentProvider.stripe: 'STRIPE',
+  PaymentProvider.nowpayments: 'NOWPAYMENTS',
+  PaymentProvider.balance: 'BALANCE',
 };
 
 const _$PaymentStatusEnumMap = {
-  PaymentStatus.pending: 'pending',
-  PaymentStatus.processing: 'processing',
-  PaymentStatus.completed: 'completed',
-  PaymentStatus.expired: 'expired',
-  PaymentStatus.failed: 'failed',
+  PaymentStatus.pending: 'PENDING',
+  PaymentStatus.processing: 'PROCESSING',
+  PaymentStatus.completed: 'COMPLETED',
+  PaymentStatus.expired: 'EXPIRED',
+  PaymentStatus.failed: 'FAILED',
 };
 
 _$CheckoutSessionImpl _$$CheckoutSessionImplFromJson(

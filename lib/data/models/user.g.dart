@@ -21,7 +21,7 @@ _$UserImpl _$$UserImplFromJson(Map<String, dynamic> json) => _$UserImpl(
           const [],
       balance: (json['balance'] as num?)?.toDouble() ?? 0,
       avatar: json['avatar'] as String? ?? '',
-      registeredAt: json['registeredAt'] as String,
+      registeredAt: json['createdAt'] as String,
       emailVerified: json['emailVerified'] as bool? ?? false,
       twoFactorEnabled: json['twoFactorEnabled'] as bool? ?? false,
       referralCode: json['referralCode'] as String? ?? '',
@@ -39,7 +39,7 @@ Map<String, dynamic> _$$UserImplToJson(_$UserImpl instance) =>
       'roles': instance.roles.map((e) => _$UserRoleEnumMap[e]!).toList(),
       'balance': instance.balance,
       'avatar': instance.avatar,
-      'registeredAt': instance.registeredAt,
+      'createdAt': instance.registeredAt,
       'emailVerified': instance.emailVerified,
       'twoFactorEnabled': instance.twoFactorEnabled,
       'referralCode': instance.referralCode,
@@ -47,14 +47,14 @@ Map<String, dynamic> _$$UserImplToJson(_$UserImpl instance) =>
     };
 
 const _$KycStatusEnumMap = {
-  KycStatus.none: 'none',
-  KycStatus.pending: 'pending',
-  KycStatus.verified: 'verified',
-  KycStatus.rejected: 'rejected',
+  KycStatus.none: 'NONE',
+  KycStatus.pending: 'PENDING',
+  KycStatus.verified: 'VERIFIED',
+  KycStatus.rejected: 'REJECTED',
 };
 
 const _$UserRoleEnumMap = {
-  UserRole.investor: 'investor',
-  UserRole.partner: 'partner',
-  UserRole.admin: 'admin',
+  UserRole.investor: 'INVESTOR',
+  UserRole.partner: 'PARTNER',
+  UserRole.admin: 'ADMIN',
 };

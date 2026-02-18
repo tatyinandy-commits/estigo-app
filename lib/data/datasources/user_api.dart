@@ -7,27 +7,32 @@ class UserApi {
   UserApi(this._dio);
 
   Future<User> updateProfile({String? name, String? phone}) async {
-    final response = await _dio.put('/user/profile', data: {
+    final response = await _dio.put('/auth/profile', data: {
       if (name != null) 'name': name,
       if (phone != null) 'phone': phone,
     });
     return User.fromJson(response.data['data']);
   }
 
-  Future<void> changePassword(String current, String newPassword) async {
-    await _dio.put('/user/password', data: {
+  Future<void> changePassword(
+    String current,
+    String newPassword,
+    String confirmPassword,
+  ) async {
+    await _dio.put('/auth/password', data: {
       'currentPassword': current,
       'newPassword': newPassword,
+      'confirmPassword': confirmPassword,
     });
   }
 
   Future<List<Map<String, dynamic>>> getSessions() async {
-    final response = await _dio.get('/user/sessions');
+    final response = await _dio.get('/auth/sessions');
     return List<Map<String, dynamic>>.from(response.data['data']);
   }
 
   Future<void> revokeSession(String sessionId) async {
-    await _dio.delete('/user/sessions/$sessionId');
+    await _dio.delete('/auth/sessions/$sessionId');
   }
 
   Future<PartnerData> getPartnerData() async {
@@ -47,5 +52,22 @@ class UserApi {
 
   Future<void> markAllNotificationsRead() async {
     await _dio.post('/notifications/read-all');
+  }
+
+  Future<void> deleteNotification(String id) async {
+    await _dio.delete('/notifications/$id');
+  }
+
+  Future<void> registerDevice(String token, String platform) async {
+    await _dio.post('/notifications/register-device', data: {
+      'token': token,
+      'platform': platform,
+    });
+  }
+
+  Future<void> unregisterDevice(String token) async {
+    await _dio.post('/notifications/unregister-device', data: {
+      'token': token,
+    });
   }
 }

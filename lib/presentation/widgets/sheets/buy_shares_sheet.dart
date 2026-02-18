@@ -30,7 +30,7 @@ class _BuySharesSheetState extends ConsumerState<BuySharesSheet> {
       if (_method == 'balance') {
         await ref.read(paymentApiProvider).payFromBalance(
           roomId: widget.room.id,
-          shares: _shares,
+          amount: _shares,
         );
         if (mounted) {
           Navigator.pop(context);

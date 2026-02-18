@@ -27,7 +27,7 @@ class PaymentApi {
     String? roomId,
     int? shares,
   }) async {
-    final response = await _dio.post('/payments/crypto/create', data: {
+    final response = await _dio.post('/payments/nowpayments/invoice', data: {
       'purpose': purpose,
       'amount': amount,
       if (roomId != null) 'roomId': roomId,
@@ -38,11 +38,25 @@ class PaymentApi {
 
   Future<void> payFromBalance({
     required String roomId,
-    required int shares,
+    required int amount,
   }) async {
-    await _dio.post('/payments/balance', data: {
+    await _dio.post('/payments/buy-from-balance', data: {
       'roomId': roomId,
-      'shares': shares,
+      'amount': amount,
     });
+  }
+
+  Future<List<Payment>> getPayments({int page = 1, int limit = 20}) async {
+    final response = await _dio.get('/payments', queryParameters: {
+      'page': page,
+      'limit': limit,
+    });
+    final list = response.data['data'] as List;
+    return list.map((e) => Payment.fromJson(e)).toList();
+  }
+
+  Future<Payment> getPayment(String id) async {
+    final response = await _dio.get('/payments/$id');
+    return Payment.fromJson(response.data['data']);
   }
 }

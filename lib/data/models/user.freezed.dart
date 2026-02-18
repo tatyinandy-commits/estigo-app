@@ -29,6 +29,7 @@ mixin _$User {
   List<UserRole> get roles => throw _privateConstructorUsedError;
   double get balance => throw _privateConstructorUsedError;
   String get avatar => throw _privateConstructorUsedError;
+  @JsonKey(name: 'createdAt')
   String get registeredAt => throw _privateConstructorUsedError;
   bool get emailVerified => throw _privateConstructorUsedError;
   bool get twoFactorEnabled => throw _privateConstructorUsedError;
@@ -59,7 +60,7 @@ abstract class $UserCopyWith<$Res> {
       List<UserRole> roles,
       double balance,
       String avatar,
-      String registeredAt,
+      @JsonKey(name: 'createdAt') String registeredAt,
       bool emailVerified,
       bool twoFactorEnabled,
       String referralCode,
@@ -174,7 +175,7 @@ abstract class _$$UserImplCopyWith<$Res> implements $UserCopyWith<$Res> {
       List<UserRole> roles,
       double balance,
       String avatar,
-      String registeredAt,
+      @JsonKey(name: 'createdAt') String registeredAt,
       bool emailVerified,
       bool twoFactorEnabled,
       String referralCode,
@@ -282,7 +283,7 @@ class _$UserImpl implements _User {
       final List<UserRole> roles = const [],
       this.balance = 0,
       this.avatar = '',
-      required this.registeredAt,
+      @JsonKey(name: 'createdAt') required this.registeredAt,
       this.emailVerified = false,
       this.twoFactorEnabled = false,
       this.referralCode = '',
@@ -323,6 +324,7 @@ class _$UserImpl implements _User {
   @JsonKey()
   final String avatar;
   @override
+  @JsonKey(name: 'createdAt')
   final String registeredAt;
   @override
   @JsonKey()
@@ -414,7 +416,7 @@ abstract class _User implements User {
       final List<UserRole> roles,
       final double balance,
       final String avatar,
-      required final String registeredAt,
+      @JsonKey(name: 'createdAt') required final String registeredAt,
       final bool emailVerified,
       final bool twoFactorEnabled,
       final String referralCode,
@@ -441,6 +443,7 @@ abstract class _User implements User {
   @override
   String get avatar;
   @override
+  @JsonKey(name: 'createdAt')
   String get registeredAt;
   @override
   bool get emailVerified;

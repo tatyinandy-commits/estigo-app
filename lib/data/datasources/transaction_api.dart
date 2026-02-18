@@ -36,11 +36,19 @@ class TransactionApi {
     required double amount,
     required String iban,
     required String recipientName,
+    String? twoFactorCode,
   }) async {
-    await _dio.post('/income/payout', data: {
+    await _dio.post('/income/payouts', data: {
       'amount': amount,
       'iban': iban,
       'recipientName': recipientName,
+      if (twoFactorCode != null) 'twoFactorCode': twoFactorCode,
+    });
+  }
+
+  Future<void> deposit(double amount) async {
+    await _dio.post('/income/deposit', data: {
+      'amount': amount,
     });
   }
 }

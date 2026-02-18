@@ -4,22 +4,22 @@ part 'user.freezed.dart';
 part 'user.g.dart';
 
 enum UserRole {
-  @JsonValue('investor')
+  @JsonValue('INVESTOR')
   investor,
-  @JsonValue('partner')
+  @JsonValue('PARTNER')
   partner,
-  @JsonValue('admin')
+  @JsonValue('ADMIN')
   admin,
 }
 
 enum KycStatus {
-  @JsonValue('none')
+  @JsonValue('NONE')
   none,
-  @JsonValue('pending')
+  @JsonValue('PENDING')
   pending,
-  @JsonValue('verified')
+  @JsonValue('VERIFIED')
   verified,
-  @JsonValue('rejected')
+  @JsonValue('REJECTED')
   rejected,
 }
 
@@ -35,7 +35,7 @@ class User with _$User {
     @Default([]) List<UserRole> roles,
     @Default(0) double balance,
     @Default('') String avatar,
-    required String registeredAt,
+    @JsonKey(name: 'createdAt') required String registeredAt,
     @Default(false) bool emailVerified,
     @Default(false) bool twoFactorEnabled,
     @Default('') String referralCode,
